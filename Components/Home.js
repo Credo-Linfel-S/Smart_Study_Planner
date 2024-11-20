@@ -9,7 +9,6 @@ import {
   Modal,
 } from "react-native";
 import { TabView, SceneMap } from "react-native-tab-view";
-import PagerView from "react-native-pager-view";
 
 export default function Home() {
   const [isModalVisible, setModalVisible] = useState(false);
@@ -114,9 +113,9 @@ export default function Home() {
       </TouchableOpacity>
 
       <Modal
-        isVisible={isModalVisible}
-        onBackdropPress={toggleModal}
-        style={styles.modal}
+        visible={isModalVisible}
+        onRequestClose={toggleModal}
+        animationType="slide"
       >
         <View style={styles.modalContent}>
           <TabView
@@ -124,7 +123,6 @@ export default function Home() {
             renderScene={renderScene}
             onIndexChange={setIndex}
             initialLayout={{ width: Dimensions.get("window").width }}
-            renderPager={(props) => <PagerView {...props} />}
           />
         </View>
       </Modal>
@@ -167,15 +165,9 @@ const styles = StyleSheet.create({
     fontSize: 24,
     color: "#FFF",
   },
-  modal: {
-    justifyContent: "flex-end",
-    margin: 0,
-  },
   modalContent: {
-    height: "50%",
+    height: "100%",
     backgroundColor: "#FFF",
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
     padding: 20,
   },
   tabContent: {
