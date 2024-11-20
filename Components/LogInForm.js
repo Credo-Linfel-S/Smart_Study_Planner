@@ -98,7 +98,7 @@
               {/* Account Options */}
               <View style={styles.accountOptions}>
                 <TouchableOpacity
-                  onPress={() => navigation.navigate("SignupForm")}
+                  onPress={() => navigation.navigate("SignUpForm")}
                 >
                   <Text style={styles.optionText}>
                     Don’t have an account yet?

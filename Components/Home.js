@@ -7,12 +7,12 @@ import {
   Dimensions,
   Modal,
 } from "react-native";
-import { TabView, SceneMap } from "react-native-tab-view";
+
 import ClassesRoute from "./Routes/ClassRoute";
 import ExamsRoute from "./Routes/ExamsRoute";
 import TasksRoute from "./Routes/TasksRoute";
 import VacationsRoute from "./Routes/VacationsRoute";
-
+import { TabView, SceneMap } from "react-native-tab-view";
 export default function Home() {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [index, setIndex] = useState(0);
@@ -24,10 +24,21 @@ export default function Home() {
     { key: "vacations", title: "Vacations", component: VacationsRoute },
   ];
 
-  const renderScene = SceneMap(
-    Object.fromEntries(routes.map(({ key, component }) => [key, component]))
-  );
-
+renderScene = ({ route }) => {
+  switch (route.key) {
+    case "classes":
+      return <ClassesRoute />;
+    case "exams":
+      return <ExamsRoute />;
+    case "tasks":
+      return <TasksRoute />;
+    case "vacations":
+      return <VacationsRoute />;
+    default:
+      return null;
+  }
+};
+//Object.fromEntries(routes.map(({ key, component }) => [key, component]))
   const toggleModal = () => {
     setIsModalVisible(!isModalVisible);
   };

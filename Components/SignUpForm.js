@@ -22,8 +22,9 @@ import ReactNativeAsyncStorage from "@react-native-async-storage/async-storage";
   GoogleSigninButton,
 } from "@react-native-google-signin/google-signin";
 */}
+
 export default function SignUpForm() {
- 
+
   {/* const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState(null);
@@ -82,6 +83,7 @@ export default function SignUpForm() {
     }
   };
 */}
+ const navigation = useNavigation();
   return (
     <KeyboardAvoidingView
       style={{ flex: 1 }}
@@ -121,12 +123,12 @@ export default function SignUpForm() {
             >
               <Text style={styles.signUpText}>Sign Up</Text>
             </TouchableOpacity>
-            <TouchableOpacity>
+            <TouchableOpacity onPress={() => navigation.navigate("LogInForm")}>
               <Text style={styles.ask}>Have an account? Sign In here </Text>
             </TouchableOpacity>
             <Text style={styles.orText}>Or Sign Up with</Text>
             <View style={styles.socialContainer}>
-             {/*<GoogleSigninButton
+              {/*<GoogleSigninButton
                 //size={GoogleSigninButton.Size.Wide}
                 //color={GoogleSigninButton.Color.Dark}
                // onPress={handleGoogleSignIn}
