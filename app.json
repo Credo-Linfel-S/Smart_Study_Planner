@@ -2,7 +2,7 @@
   "expo": {
     "name": "Smart_Study_Planner",
     "slug": "Smart_Study_Planner",
-    "scheme": "Smart_Study_Planner",
+    "scheme": "Smart_Study_Planner",        
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",

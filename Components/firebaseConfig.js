@@ -1,27 +1,19 @@
-import { initializeApp, getApps, getApp } from "firebase/app";
-import {
-  initializeAuth,
-  getReactNativePersistence,
-  //getAuth,
-} from "firebase/auth";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import firebase from "firebase/app";
+import "firebase/auth"; // for authentication
+import "firebase/firestore"; // for Firestore (if using it)
 
-// Firebase configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyD3XL0CuTN_OQS2DN55ctUmf5L251JXp9I",
+  apiKey: "AIzaSyBNGoR0WLXNXGfWtqnVsKt4S4E2bRk0PNI",
   authDomain: "smart-study-planner-71dd9.firebaseapp.com",
   projectId: "smart-study-planner-71dd9",
   storageBucket: "smart-study-planner-71dd9.firebasestorage.app",
   messagingSenderId: "105140411604",
-  appId: "1:105140411604:web:afb8ef7e4293a692046f41",
+  appId: "1:105140411604:android:001c187c8dc84b3a046f41",
 };
 
-// Check if any Firebase apps are already initialized
-const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
-
-// Initialize Auth with persistence only once
-const auth = initializeAuth(app, {
-  persistence: getReactNativePersistence(AsyncStorage),
-});
-
-export { auth };
+// Initialize Firebase
+if (!firebase.apps.length) {
+  firebase.initializeApp(firebaseConfig);
+} else {
+  firebase.app(); // if already initialized
+}
