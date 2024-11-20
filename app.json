@@ -2,6 +2,7 @@
   "expo": {
     "name": "Smart_Study_Planner",
     "slug": "Smart_Study_Planner",
+    "scheme": "Smart_Study_Planner",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -12,6 +13,7 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
+    "plugins": ["@react-native-google-signin/google-signin", "expo-router"],
     "ios": {
       "supportsTablet": true
     },
@@ -19,10 +21,16 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "com.Linfel.Smart_Study_Planner"
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "ade8da0e-cc47-4081-a63b-723f63c227d5"
+      }
     }
   }
 }
