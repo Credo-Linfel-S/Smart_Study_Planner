@@ -4,43 +4,23 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  Dimensions,
   Modal,
+  Alert,
 } from "react-native";
+import { useNavigation } from "@react-navigation/native";
 
-import ClassesRoute from "./Routes/ClassRoute";
-import ExamsRoute from "./Routes/ExamsRoute";
-import TasksRoute from "./Routes/TasksRoute";
-import VacationsRoute from "./Routes/VacationsRoute";
-import { TabView, SceneMap } from "react-native-tab-view";
 export default function Home() {
   const [isModalVisible, setIsModalVisible] = useState(false);
-  const [index, setIndex] = useState(0);
+  const navigation = useNavigation();
 
-  const routes = [
-    { key: "classes", title: "Classes", component: ClassesRoute },
-    { key: "exams", title: "Exams", component: ExamsRoute },
-    { key: "tasks", title: "Tasks", component: TasksRoute },
-    { key: "vacations", title: "Vacations", component: VacationsRoute },
-  ];
-
-renderScene = ({ route }) => {
-  switch (route.key) {
-    case "classes":
-      return <ClassesRoute />;
-    case "exams":
-      return <ExamsRoute />;
-    case "tasks":
-      return <TasksRoute />;
-    case "vacations":
-      return <VacationsRoute />;
-    default:
-      return null;
-  }
-};
-//Object.fromEntries(routes.map(({ key, component }) => [key, component]))
   const toggleModal = () => {
     setIsModalVisible(!isModalVisible);
+  };
+
+  const handleMenuSelection = (route) => {
+    // Close the modal and navigate to the selected route
+    setIsModalVisible(false);
+    navigation.navigate(route); // Navigate to the selected screen
   };
 
   return (
@@ -48,22 +28,51 @@ renderScene = ({ route }) => {
       <Text style={styles.greeting}>Good Afternoon!</Text>
       <Text style={styles.name}>Linfel</Text>
       <Text style={styles.date}>Sat, 20 Nov</Text>
+
       <TouchableOpacity style={styles.addButton} onPress={toggleModal}>
         <Text style={styles.addButtonText}>+</Text>
       </TouchableOpacity>
 
+      {/* Modal showing options for routes */}
       <Modal
         visible={isModalVisible}
         onRequestClose={toggleModal}
         animationType="slide"
       >
         <View style={styles.modalContent}>
-          <TabView
-            navigationState={{ index, routes }}
-            renderScene={renderScene}
-            onIndexChange={setIndex}
-            initialLayout={{ width: Dimensions.get("window").width }}
-          />
+          <Text style={styles.modalTitle}>Select a Route</Text>
+
+          <TouchableOpacity
+            style={styles.optionButton}
+            onPress={() => handleMenuSelection("Class")}
+          >
+            <Text style={styles.optionText}>Classes</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.optionButton}
+            onPress={() => handleMenuSelection("ExamsRoute")}
+          >
+            <Text style={styles.optionText}>Exams</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.optionButton}
+            onPress={() => handleMenuSelection("TasksRoute")}
+          >
+            <Text style={styles.optionText}>Tasks</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.optionButton}
+            onPress={() => handleMenuSelection("VacationsRoute")}
+          >
+            <Text style={styles.optionText}>Vacations</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.cancelButton} onPress={toggleModal}>
+            <Text style={styles.cancelText}>Cancel</Text>
+          </TouchableOpacity>
         </View>
       </Modal>
     </View>
@@ -106,8 +115,39 @@ const styles = StyleSheet.create({
     color: "#FFF",
   },
   modalContent: {
-    height: "100%",
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
     backgroundColor: "#FFF",
     padding: 20,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    marginBottom: 20,
+  },
+  optionButton: {
+    backgroundColor: "#00C8FF",
+    width: 200,
+    padding: 15,
+    marginBottom: 10,
+    borderRadius: 5,
+    alignItems: "center",
+  },
+  optionText: {
+    color: "#FFF",
+    fontSize: 18,
+  },
+  cancelButton: {
+    backgroundColor: "gray",
+    width: 200,
+    padding: 15,
+    marginTop: 20,
+    borderRadius: 5,
+    alignItems: "center",
+  },
+  cancelText: {
+    color: "#FFF",
+    fontSize: 18,
   },
 });

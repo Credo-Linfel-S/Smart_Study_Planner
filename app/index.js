@@ -3,17 +3,17 @@ import LogInForm from "../Components/LogInForm";
 import Home from "../Components/Home";
 import SignUpForm from "../Components/SignUpForm";
 import React from "react";
-import ClassesRoute from "../Components/Routes/ClassRoute";
+import Class from "../Components/Routes/Class";
 
 export default function index() {
   const Stack = createNativeStackNavigator();
   return (
-    <Stack.Navigator initialRouteName="LogInForm">
-      <Stack.Screen
+    <Stack.Navigator initialRouteName="Home">
+      {/*<Stack.Screen
         name="LogInForm"
         component={LogInForm}
         options={{ headerShown: false }}
-      />
+      />*/}
       <Stack.Screen
         name="Home"
         component={Home}
@@ -25,8 +25,8 @@ export default function index() {
         options={{ headerShown: false }}
       />
       <Stack.Screen
-        name="Classes"
-        component={ClassesRoute}
+        name="Class"
+        component={Class}
         options={{ headerShown: false }}
       />
     </Stack.Navigator>
