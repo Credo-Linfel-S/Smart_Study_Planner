@@ -10,7 +10,7 @@ import {
   StyleSheet,
 } from "react-native";
 
-const ExamForm = () => {
+const Class = () => {
   const [subject, setSubject] = useState("");
   const [resit, setResit] = useState(false);
   const [type, setType] = useState("Exam");
@@ -244,4 +244,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default ExamForm;
+export default Class;

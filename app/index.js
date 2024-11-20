@@ -1,8 +1,9 @@
 import React from "react";
+//import { NavigationContainer } from "@react-navigation/native"; // Only one container here
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-//import LogInForm from "../Components/LogInForm";
-import Home from "../Components/Home";
-import SignUpForm from "../Components/SignUpForm"
+import LogInForm from "../Components/LogInForm";
+import Home from "./Home";
+//import SignUpForm from "../Components/SignUpForm"
 
 
 
@@ -12,7 +13,7 @@ export default function index() {
     <Stack.Navigator initialRouteName="SignUpForm">
       <Stack.Screen
         name="SignUpForm"
-        component={SignUpForm}
+        component={LogInForm}
         options={{ headerShown: false }}
       />
       <Stack.Screen
