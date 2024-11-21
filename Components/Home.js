@@ -8,40 +8,40 @@ import {
   Alert,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
-import { GoogleSignin } from "@react-native-google-signin/google-signin"; // Import GoogleSignin
-import AsyncStorage from "@react-native-async-storage/async-storage"; // Import AsyncStorage if you're using it
+import { GoogleSignin } from "@react-native-google-signin/google-signin"; 
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function Home({ route }) {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const navigation = useNavigation();
 
-  // Extract user and first name
+  
   const { user } = route.params || {};
   const name = user?.name || "User";
   const email = user?.email || "N/A";
 
-  // Toggle modal visibility
+
   const toggleModal = () => {
     setIsModalVisible(!isModalVisible);
   };
 
-  // Handle navigation to selected route
+
   const handleMenuSelection = (routeName) => {
     setIsModalVisible(false);
     navigation.navigate(routeName);
   };
 
-  // Logout function - clears user data, signs out from Google and navigates to sign-in screen
+ 
   const handleLogout = async () => {
     try {
-      // Sign out from Google
+     
       await GoogleSignin.signOut();
 
-      // Clear AsyncStorage (if you're storing user data in AsyncStorage)
+ 
       await AsyncStorage.removeItem("user");
 
-      // Navigate to sign-in screen
-      navigation.replace("Testing"); // Replace this with your actual Sign-In screen name
+     
+      navigation.replace("Testing"); 
     } catch (error) {
       console.error("Logout Error: ", error);
       Alert.alert(
@@ -53,18 +53,18 @@ export default function Home({ route }) {
 
   return (
     <View style={styles.container}>
-      {/* Display user's first name */}
+
       <Text style={styles.greeting}>Good Afternoon!</Text>
       <Text>Welcome, {name}!</Text>
       <Text>Email: {email}</Text>
       <Text style={styles.date}>Sat, 20 Nov</Text>
 
-      {/* Add button to toggle modal */}
+  
       <TouchableOpacity style={styles.addButton} onPress={toggleModal}>
         <Text style={styles.addButtonText}>+</Text>
       </TouchableOpacity>
 
-      {/* Modal showing options for routes */}
+
       <Modal
         visible={isModalVisible}
         onRequestClose={toggleModal}
@@ -73,7 +73,6 @@ export default function Home({ route }) {
         <View style={styles.modalContent}>
           <Text style={styles.modalTitle}>Select a Route</Text>
 
-          {/* Menu options with navigation */}
           <TouchableOpacity
             style={styles.optionButton}
             onPress={() => handleMenuSelection("Class")}
@@ -109,7 +108,7 @@ export default function Home({ route }) {
         </View>
       </Modal>
 
-      {/* Logout Button */}
+   
       <View style={styles.buttonContainer}>
         <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
           <Text style={styles.logoutText}>Logout</Text>

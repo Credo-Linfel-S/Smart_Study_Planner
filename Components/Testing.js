@@ -23,10 +23,10 @@ const Testing = ({ navigation }) => {
       // Extract user details
       const fullName = userInfo?.data?.user?.name || "User";
       const email = userInfo?.data?.user?.email || "N/A";
-      // Safely retrieve the user's name and email
+
       console.log("Extracted User Info:", { fullName, email });
 
-      // Pass the user data to the home screen
+
       navigation.replace("Home", {
         user: {
           name: fullName,
