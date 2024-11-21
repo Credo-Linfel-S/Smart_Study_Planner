@@ -1,64 +1,107 @@
-import React, { useEffect, useState } from "react";
-import { Text, StyleSheet, View, Alert } from "react-native";
-import {
-  GoogleSignin,
-  GoogleSigninButton,
-} from "@react-native-google-signin/google-signin";
-
-const Testing = ({ navigation }) => {
-  const [error, setError] = useState();
-
-  useEffect(() => {
-    GoogleSignin.configure({
-      webClientId:
-        "105140411604-2f9b4v2r0g2hdccf6q2i9p9go704mra1.apps.googleusercontent.com",
-    });
-  }, []);
-
-  const signin = async () => {
-    try {
-      await GoogleSignin.hasPlayServices();
-      const userInfo = await GoogleSignin.signIn();
-
-      // Extract user details
-      const fullName = userInfo?.data?.user?.name || "User";
-      const email = userInfo?.data?.user?.email || "N/A";
-
-      console.log("Extracted User Info:", { fullName, email });
-
-
-      navigation.replace("Home", {
-        user: {
-          name: fullName,
-          email: email,
-        },
-      });
-    } catch (e) {
-      console.error("Google Sign-In Error:", e);
-
-      Alert.alert("Sign-In Failed", e.message);
-    }
-  };
-
-  return (
-    <View style={styles.container}>
-      {error && <Text>{JSON.stringify(error)}</Text>}
-      <GoogleSigninButton
-        size={GoogleSigninButton.Size.Standard}
-        color={GoogleSigninButton.Color.Dark}
-        onPress={signin}
-      />
-    </View>
-  );
-};
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#F0F8FF",
+  },
+  greeting: {
+    fontSize: 18,
+    color: "#333",
+  },
+  examContainer: {
+    width: "90%",
+    flex: 1,
+    marginTop: 10,
+  },
+  examTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    marginBottom: 10,
+  },
+  examCard: {
+    padding: 15,
+    backgroundColor: "#FFF",
+    borderRadius: 5,
+    marginBottom: 15,
+  },
+  examText: {
+    fontSize: 16,
+  },
+  deleteButton: {
+    marginTop: 10,
+    backgroundColor: "#FF6347",
+    padding: 10,
+    borderRadius: 5,
+    alignItems: "center",
+  },
+  deleteButtonText: {
+    color: "#FFF",
+    fontSize: 16,
+  },
+  addButton: {
+    position: "absolute",
+    bottom: 50,
+    right: 20,
+    backgroundColor: "#00C8FF",
+    width: 60,
+    height: 60,
+    borderRadius: 30,
     alignItems: "center",
     justifyContent: "center",
   },
+  addButtonText: {
+    fontSize: 24,
+    color: "#FFF",
+  },
+  modalContent: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#FFF",
+    padding: 20,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    marginBottom: 20,
+  },
+  optionButton: {
+    backgroundColor: "#00C8FF",
+    width: 200,
+    padding: 15,
+    marginBottom: 10,
+    borderRadius: 5,
+    alignItems: "center",
+  },
+  optionText: {
+    color: "#FFF",
+    fontSize: 18,
+  },
+  cancelButton: {
+    backgroundColor: "gray",
+    width: 200,
+    padding: 15,
+    marginTop: 20,
+    borderRadius: 5,
+    alignItems: "center",
+  },
+  cancelText: {
+    color: "#FFF",
+    fontSize: 18,
+  },
+  buttonContainer: {
+    marginTop: 20,
+  },
+  logoutButton: {
+    backgroundColor: "#FF6347",
+    padding: 15,
+    width: 200,
+    borderRadius: 5,
+    alignItems: "center",
+  },
+  logoutText: {
+    color: "#FFF",
+    fontSize: 18,
+  },
 });
-
-export default Testing;

@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
-  View,
+  
   Text,
   TextInput,
   TouchableOpacity,
@@ -13,77 +13,73 @@ import {
   Platform,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
-import { auth } from "./firebaseConfig";
-import { createUserWithEmailAndPassword } from "firebase/auth";
 import { LinearGradient } from "expo-linear-gradient";
-import ReactNativeAsyncStorage from "@react-native-async-storage/async-storage";
-{/*import {
-  GoogleSignin,
-  GoogleSigninButton,
-} from "@react-native-google-signin/google-signin";
-*/}
-
+import { createUserWithEmailAndPassword } from "firebase/auth";
+import { auth } from "./firebaseConfig";
+import { getDatabase, ref, set } from "firebase/database";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 export default function SignUpForm() {
-
-  {/* const [email, setEmail] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState(null);
   const navigation = useNavigation();
 
-  useEffect(() => {
-    GoogleSignin.configure({
-      webClientId:
-        "105140411604-2f9b4v2r0g2hdccf6q2i9p9go704mra1.apps.googleusercontent.com",
-    });
-  }, []);
+ const handleSignUp = async () => {
+   if (!firstName || !email || !password) {
+     alert("Please fill in all fields.");
+     return;
+   }
 
-  const handleSignUp = async () => {
-    setError(null);
-    if (!email || !password) {
-      setError("Please fill in all fields.");
-      return;
-    }
+   try {
+     // Save user data to AsyncStorage
+     await AsyncStorage.setItem(
+       "user",
+       JSON.stringify({ username: firstName, email })
+     );
 
-    try {
-      const userCredential = await createUserWithEmailAndPassword(
-        auth,
-        email,
-        password
-      );
-      const user = userCredential.user;
-      storeUserData(user);
-      setEmail("");
-      setPassword("");
-      navigation.navigate("Home");
-    } catch (error) {
-      setError(error.message);
-    }
-  };
+     // Verify that data was saved
+     const savedUser = await AsyncStorage.getItem("user");
+     console.log("Saved User to AsyncStorage:", savedUser); // Check the saved data
+   } catch (error) {
+     console.error("Error saving user data to AsyncStorage:", error);
+   }
 
-  const handleGoogleSignIn = async () => {
-    try {
-      await GoogleSignin.hasPlayServices();
-      const userInfo = await GoogleSignin.signIn();
-      const credential = GoogleAuthProvider.credential(userInfo.idToken);
-      const userCredential = await signInWithCredential(auth, credential);
-      const user = userCredential.user;
-      storeUserData(user);
-      navigation.navigate("Home");
-    } catch (error) {
-      setError(error.message);
-    }
-  };
+   try {
+     // Create user in Firebase Authentication
+     const userCredential = await createUserWithEmailAndPassword(
+       auth,
+       email,
+       password
+     );
 
-  const storeUserData = async (userData) => {
-    try {
-      await ReactNativeAsyncStorage.setItem("user", JSON.stringify(userData));
-      console.log("User data saved successfully");
-    } catch (error) {
-      console.error("Error saving user data", error);
-    }
-  };
-*/}
- const navigation = useNavigation();
+     const user = userCredential.user;
+
+     if (!user) {
+       throw new Error("User object is missing from Firebase response.");
+     }
+
+     console.log("Firebase User Object:", user);
+
+     // Save user data to Realtime Database
+     const database = getDatabase(); // Initialize database instance
+     const userRef = ref(database, `users/${user.uid}`); // Reference user's node
+
+     await set(userRef, {
+       username: firstName,
+       email: email,
+     });
+
+     console.log("User created and saved to database:", user.uid);
+
+     // Navigate to the Home screen
+     console.log("Navigating to Home with:", { name: firstName, email });
+     navigation.navigate("Home", { user: { username: firstName, email } });
+   } catch (error) {
+     console.error("Error signing up:", error.message);
+     alert(error.message);
+   }
+ };
+
   return (
     <KeyboardAvoidingView
       style={{ flex: 1 }}
@@ -103,38 +99,31 @@ export default function SignUpForm() {
               style={styles.logo}
             />
             <Text style={styles.title}>Start your journey by Signing Up</Text>
-            {/*<Text style={{ color: "red" }}>{error || ""}</Text>*/}
+            <TextInput
+              placeholder="First Name"
+              value={firstName}
+              onChangeText={setFirstName}
+              style={styles.input}
+            />
             <TextInput
               placeholder="Email"
-              //value={email}
-              //onChangeText={setEmail}
+              value={email}
+              onChangeText={setEmail}
               style={styles.input}
             />
             <TextInput
               placeholder="Password"
-              //value={password}
-              //onChangeText={setPassword}
+              value={password}
+              onChangeText={setPassword}
               secureTextEntry
               style={styles.input}
             />
             <TouchableOpacity
               style={styles.signUpButton}
-              //onPress={handleSignUp}
+              onPress={handleSignUp}
             >
               <Text style={styles.signUpText}>Sign Up</Text>
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => navigation.navigate("LogInForm")}>
-              <Text style={styles.ask}>Have an account? Sign In here </Text>
-            </TouchableOpacity>
-            <Text style={styles.orText}>Or Sign Up with</Text>
-            <View style={styles.socialContainer}>
-              {/*<GoogleSigninButton
-                //size={GoogleSigninButton.Size.Wide}
-                //color={GoogleSigninButton.Color.Dark}
-               // onPress={handleGoogleSignIn}
-                style={styles.socialButton}
-              />*/}
-            </View>
           </ScrollView>
         </LinearGradient>
       </TouchableWithoutFeedback>
@@ -207,46 +196,5 @@ const styles = StyleSheet.create({
     color: "#ffffff",
     fontWeight: "700",
     fontSize: 18,
-  },
-  ask: { bottom: 10, marginBottom: 0, marginRight: 100 },
-  orText: {
-    fontSize: 16,
-    marginVertical: 10,
-    color: "#f1f1f1",
-    textAlign: "center",
-  },
-  socialContainer: {
-    flexDirection: "row",
-    justifyContent: "center",
-    width: "100%",
-    marginTop: 10,
-  },
-  socialButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "rgba(255, 255, 255, 0.15)",
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 25,
-    borderColor: "rgba(255, 255, 255, 0.3)",
-    borderWidth: 1,
-    elevation: 5,
-    width: "100%",
-    justifyContent: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 6,
-  },
-  socialIcon: {
-    width: 28,
-    height: 28,
-    marginRight: 10,
-    resizeMode: "contain",
-  },
-  socialText: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#ffffff",
   },
 });

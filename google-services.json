@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "105140411604",
+    "project_id": "smart-study-planner-71dd9",
+    "storage_bucket": "smart-study-planner-71dd9.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:105140411604:android:001c187c8dc84b3a046f41",
+        "android_client_info": {
+          "package_name": "com.Linfel.Smart_Study_Planner"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "105140411604-f204t22n93vkkmpt7amqq16gfgr96qv4.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.Linfel.Smart_Study_Planner",
+            "certificate_hash": "4471888923f90b165b938ac538bec7fc9c94ddf2"
+          }
+        },
+        {
+          "client_id": "105140411604-2f9b4v2r0g2hdccf6q2i9p9go704mra1.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBNGoR0WLXNXGfWtqnVsKt4S4E2bRk0PNI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "105140411604-2f9b4v2r0g2hdccf6q2i9p9go704mra1.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

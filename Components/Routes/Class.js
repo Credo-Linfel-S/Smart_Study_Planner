@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState,useEffect } from "react";
 import {
   View,
   Text,
@@ -6,11 +6,14 @@ import {
   TouchableOpacity,
   ScrollView,
   Switch,
-  //Button,
+  Alert,
   StyleSheet,
 } from "react-native";
+import { useNavigation } from "@react-navigation/native";
+import { getDatabase, ref, set, push } from "firebase/database";
+import AsyncStorage from "@react-native-async-storage/async-storage"; // Import AsyncStorage
 
-const Class = () => {
+const Class = ({route}) => {
   const [subject, setSubject] = useState("");
   const [resit, setResit] = useState(false);
   const [type, setType] = useState("Exam");
@@ -22,187 +25,134 @@ const Class = () => {
   const [time, setTime] = useState("");
   const [duration, setDuration] = useState("");
 
+  const navigation = useNavigation();
+
+  const handleSaveExam = async () => {
+    if (!subject || !module || !date || !time || !duration) {
+      Alert.alert("Error", "Please fill in all required fields.");
+      return;
+    }
+
+    try {
+      // Get user data from AsyncStorage
+      const userData = await AsyncStorage.getItem("user");
+      const parsedUser = userData ? JSON.parse(userData) : null;
+      const username = parsedUser ? parsedUser.username : "Guest";
+
+      // Save to Firebase Realtime Database
+      const db = getDatabase();
+      const userExamsRef = ref(db, `exams/${username}`); // Save exams under user-specific path
+
+      const newExamRef = push(userExamsRef);
+      await set(newExamRef, {
+        subject,
+        resit,
+        type,
+        mode,
+        module,
+        seat,
+        room,
+        date,
+        time,
+        duration,
+        createdAt: new Date().toISOString(),
+        username,
+      });
+
+      // Navigate back to Home screen with saved exam data
+      navigation.navigate("Home", {
+        savedExam: {
+          subject,
+          resit,
+          type,
+          mode,
+          module,
+          seat,
+          room,
+          date,
+          time,
+          duration,
+          username,
+        },
+      });
+    } catch (error) {
+      Alert.alert("Error", "Failed to save exam. Please try again.");
+    }
+  };
+useEffect(() => {
+  if (route.params?.savedExam) {
+    setSavedExams((prevExams) => {
+      const updatedExams = [...prevExams, route.params.savedExam];
+      console.log("Updated exams list:", updatedExams);
+      return updatedExams;
+    });
+  }
+}, [route.params?.savedExam]);
+
+  const handleCancel = () => {
+    navigation.navigate("Home");
+  };
+
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.header}>New</Text>
+      <Text style={styles.header}>New Exam</Text>
 
-      <View style={styles.section}>
-        <Text style={styles.label}>Select subject *</Text>
-        <View style={styles.buttonGroup}>
-          {[
-            "English",
-            "Mathematics",
-            "Science",
-            "Biology",
-            "Chemistry",
-            "Physics",
-            "Music",
-            "Geography",
-            "History",
-            "Computer Science",
-          ].map((subj) => (
-            <TouchableOpacity
-              key={subj}
-              style={[styles.button, subject === subj && styles.buttonSelected]}
-              onPress={() => setSubject(subj)}
-            >
-              <Text style={styles.buttonText}>{subj}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-      </View>
+      {/* Form Inputs for Exam */}
+      <TextInput
+        style={styles.input}
+        placeholder="Subject"
+        value={subject}
+        onChangeText={setSubject}
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Module"
+        value={module}
+        onChangeText={setModule}
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Date"
+        value={date}
+        onChangeText={setDate}
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Time"
+        value={time}
+        onChangeText={setTime}
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Duration"
+        value={duration}
+        onChangeText={setDuration}
+        keyboardType="numeric"
+      />
 
-      <View style={styles.section}>
-        <Text style={styles.label}>Resit</Text>
-        <Switch value={resit} onValueChange={(value) => setResit(value)} />
-      </View>
-
-      <View style={styles.section}>
-        <Text style={styles.label}>Type</Text>
-        <View style={styles.buttonGroup}>
-          {["Exam", "Quiz", "Test"].map((examType) => (
-            <TouchableOpacity
-              key={examType}
-              style={[
-                styles.button,
-                type === examType && styles.buttonSelected,
-              ]}
-              onPress={() => setType(examType)}
-            >
-              <Text style={styles.buttonText}>{examType}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-      </View>
-
-      <View style={styles.section}>
-        <Text style={styles.label}>Mode</Text>
-        <View style={styles.buttonGroup}>
-          {["In Person", "Online"].map((examMode) => (
-            <TouchableOpacity
-              key={examMode}
-              style={[
-                styles.button,
-                mode === examMode && styles.buttonSelected,
-              ]}
-              onPress={() => setMode(examMode)}
-            >
-              <Text style={styles.buttonText}>{examMode}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-      </View>
-
-      <View style={styles.section}>
-        <Text style={styles.label}>Module*</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Module Name"
-          value={module}
-          onChangeText={setModule}
-        />
-      </View>
-
-      <View style={styles.sectionRow}>
-        <View style={styles.halfInputContainer}>
-          <Text style={styles.label}>Seat</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Seat #"
-            value={seat}
-            onChangeText={setSeat}
-          />
-        </View>
-        <View style={styles.halfInputContainer}>
-          <Text style={styles.label}>Room</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Room"
-            value={room}
-            onChangeText={setRoom}
-          />
-        </View>
-      </View>
-
-      <View style={styles.sectionRow}>
-        <View style={styles.halfInputContainer}>
-          <Text style={styles.label}>Date*</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="e.g., Fri, 4 Mar 2022"
-            value={date}
-            onChangeText={setDate}
-          />
-        </View>
-        <View style={styles.halfInputContainer}>
-          <Text style={styles.label}>Time*</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="10:30 AM"
-            value={time}
-            onChangeText={setTime}
-          />
-        </View>
-      </View>
-
-      <View style={styles.section}>
-        <Text style={styles.label}>Duration (In minutes)*</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Duration (In minutes)"
-          value={duration}
-          onChangeText={setDuration}
-          keyboardType="numeric"
-        />
-      </View>
-
-      <View style={styles.buttonContainer}>
-        <TouchableOpacity
-          style={styles.cancelButton}
-          onPress={() => alert("Canceled")}
-        >
-          <Text style={styles.buttonText}>Cancel</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.saveButton}
-          onPress={() => alert("Exam Saved!")}
-        >
-          <Text style={styles.buttonText}>Save Exam</Text>
-        </TouchableOpacity>
-      </View>
+      {/* Buttons */}
+      <TouchableOpacity onPress={handleCancel}>
+        <Text>Cancel</Text>
+      </TouchableOpacity>
+      <TouchableOpacity onPress={handleSaveExam}>
+        <Text>Save Exam</Text>
+      </TouchableOpacity>
     </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    padding: 20,
-    backgroundColor: "#f0f8ff",
-  },
-  header: {
-    fontSize: 24,
-    fontWeight: "bold",
-    marginBottom: 20,
-  },
-  section: {
-    marginBottom: 15,
-  },
+  container: { padding: 20, backgroundColor: "#f0f8ff" },
+  header: { fontSize: 24, fontWeight: "bold", marginBottom: 20 },
+  section: { marginBottom: 15 },
   sectionRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     marginBottom: 15,
   },
-  halfInputContainer: {
-    width: "48%",
-  },
-  label: {
-    marginBottom: 5,
-    fontSize: 16,
-  },
-  buttonGroup: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-  },
+  halfInputContainer: { width: "48%" },
+  label: { marginBottom: 5, fontSize: 16 },
+  buttonGroup: { flexDirection: "row", flexWrap: "wrap" },
   button: {
     padding: 10,
     borderRadius: 5,
@@ -212,13 +162,8 @@ const styles = StyleSheet.create({
     marginRight: 5,
     marginBottom: 5,
   },
-  buttonSelected: {
-    backgroundColor: "#007bff",
-  },
-  buttonText: {
-    color: "#007bff",
-    fontWeight: "bold",
-  },
+  buttonSelected: { backgroundColor: "#007bff" },
+  buttonText: { color: "#007bff", fontWeight: "bold" },
   input: {
     borderWidth: 1,
     borderColor: "#ddd",
@@ -226,10 +171,7 @@ const styles = StyleSheet.create({
     padding: 10,
     backgroundColor: "white",
   },
-  buttonContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },
+  buttonContainer: { flexDirection: "row", justifyContent: "space-between" },
   cancelButton: {
     padding: 15,
     backgroundColor: "#ff4d4d",
@@ -243,5 +185,4 @@ const styles = StyleSheet.create({
     flex: 0.45,
   },
 });
-
 export default Class;
