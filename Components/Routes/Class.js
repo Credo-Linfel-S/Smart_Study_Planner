@@ -46,12 +46,8 @@ const Class = ({route}) => {
       const newExamRef = push(userExamsRef);
       await set(newExamRef, {
         subject,
-        resit,
         type,
-        mode,
         module,
-        seat,
-        room,
         date,
         time,
         duration,
@@ -63,12 +59,8 @@ const Class = ({route}) => {
       navigation.navigate("Home", {
         savedExam: {
           subject,
-          resit,
           type,
-          mode,
           module,
-          seat,
-          room,
           date,
           time,
           duration,
