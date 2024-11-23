@@ -2,12 +2,16 @@
   "expo": {
     "name": "Smart_Study_Planner",
     "slug": "Smart_Study_Planner",
-    "scheme": "Smart_Study_Planner",        
+    "scheme": "Smart_Study_Planner",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
+    "notification": {
+      "icon": "./assets/splash-icon.png",
+      "color": "#000000"
+    },
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",

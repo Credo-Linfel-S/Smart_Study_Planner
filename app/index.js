@@ -7,7 +7,7 @@ import Home from "../Components/Home";
 import SignUpForm from "../Components/SignUpForm";
 import Class from "../Components/Routes/Class";
 import { GoogleSignin } from "@react-native-google-signin/google-signin";
-
+import Testing from "../Components/Testing"
 // Configure Google Sign-In
 GoogleSignin.configure({
   webClientId:
@@ -42,7 +42,7 @@ const index = () => {
   const Stack = createNativeStackNavigator();
 
   return (
-    <Stack.Navigator initialRouteName="LogInForm">
+    <Stack.Navigator initialRouteName="Home">
       <Stack.Screen
         name="LogInForm"
         component={LogInForm}
@@ -54,13 +54,18 @@ const index = () => {
         options={{ headerShown: false }}
       />
       <Stack.Screen
-        name="SignUpForm"
-        component={SignUpForm}
+        name="Testing"
+        component={Testing}
         options={{ headerShown: false }}
       />
       <Stack.Screen
         name="Class"
         component={Class}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="SignUpForm"
+        component={SignUpForm}
         options={{ headerShown: false }}
       />
     </Stack.Navigator>

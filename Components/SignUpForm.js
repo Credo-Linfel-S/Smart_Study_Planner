@@ -1,6 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
-  
   Text,
   TextInput,
   TouchableOpacity,
@@ -11,80 +10,113 @@ import {
   TouchableWithoutFeedback,
   Keyboard,
   Platform,
+  View,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
-import { createUserWithEmailAndPassword } from "firebase/auth";
+import {
+  createUserWithEmailAndPassword,
+  GoogleAuthProvider,
+  signInWithCredential,
+} from "firebase/auth";
 import { auth } from "./firebaseConfig";
 import { getDatabase, ref, set } from "firebase/database";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as Google from "expo-auth-session";
+
 export default function SignUpForm() {
   const [firstName, setFirstName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigation = useNavigation();
 
- const handleSignUp = async () => {
-   if (!firstName || !email || !password) {
-     alert("Please fill in all fields.");
-     return;
-   }
+  // Google Auth Request
+  const [request, response, promptAsync] = Google.useAuthRequest({
+    clientId:
+      "105140411604-2f9b4v2r0g2hdccf6q2i9p9go704mra1.apps.googleusercontent.com",
+    redirectUri: Google.makeRedirectUri({
+      useProxy: true, // Set to false if running on a physical device without Expo Go
+    }),
+  });
 
-   try {
-     // Save user data to AsyncStorage
-     await AsyncStorage.setItem(
-       "user",
-       JSON.stringify({ username: firstName, email })
-     );
+  useEffect(() => {
+    if (response?.type === "success") {
+      const { id_token } = response.params;
 
-     // Verify that data was saved
-     const savedUser = await AsyncStorage.getItem("user");
-     console.log("Saved User to AsyncStorage:", savedUser); // Check the saved data
-   } catch (error) {
-     console.error("Error saving user data to AsyncStorage:", error);
-   }
+      const handleGoogleSignUp = async () => {
+        try {
+          const googleCredential = GoogleAuthProvider.credential(id_token);
+          const userCredential = await signInWithCredential(
+            auth,
+            googleCredential
+          );
+          const user = userCredential.user;
 
-   try {
-     // Create user in Firebase Authentication
-     const userCredential = await createUserWithEmailAndPassword(
-       auth,
-       email,
-       password
-     );
+          // Get user's first name (from displayName or givenName if available)
+          const firstNameFromGoogle = user.displayName?.split(" ")[0] || "User"; // Fallback to "User" if no name
 
-     const user = userCredential.user;
+          // Save user data to AsyncStorage
+          await AsyncStorage.setItem(
+            "user",
+            JSON.stringify({ username: firstNameFromGoogle, email: user.email })
+          );
 
-     if (!user) {
-       throw new Error("User object is missing from Firebase response.");
-     }
+          // Save user data to Firebase Database
+          const database = getDatabase();
+          const userRef = ref(database, `users/${user.uid}`);
+          await set(userRef, {
+            username: firstNameFromGoogle,
+            email: user.email,
+          });
 
-     console.log("Firebase User Object:", user);
+          console.log("User signed in with Google:", user.uid);
+          navigation.navigate("Home", {
+            user: { username: firstNameFromGoogle, email: user.email },
+          });
+        } catch (error) {
+          console.error("Error signing in with Google:", error.message);
+          alert("Google Sign-In failed. Please try again.");
+        }
+      };
 
-     // Save user data to Realtime Database
-     const database = getDatabase(); // Initialize database instance
-     const userRef = ref(database, `users/${user.uid}`); // Reference user's node
+      handleGoogleSignUp();
+    }
+  }, [response, navigation]);
 
-     await set(userRef, {
-       username: firstName,
-       email: email,
-     });
+  const handleSignUp = async () => {
+    if (!firstName || !email || !password) {
+      alert("Please fill in all fields.");
+      return;
+    }
 
-     console.log("User created and saved to database:", user.uid);
+    try {
+      await AsyncStorage.setItem(
+        "user",
+        JSON.stringify({ username: firstName, email })
+      );
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
+      const user = userCredential.user;
 
-     // Navigate to the Home screen
-     console.log("Navigating to Home with:", { name: firstName, email });
-     navigation.navigate("Home", { user: { username: firstName, email } });
-   } catch (error) {
-     console.error("Error signing up:", error.message);
-     alert(error.message);
-   }
- };
+      const database = getDatabase();
+      const userRef = ref(database, `users/${user.uid}`);
+      await set(userRef, { username: firstName, email });
+
+      console.log("User created and saved to database:", user.uid);
+      navigation.navigate("Home", { user: { username: firstName, email } });
+    } catch (error) {
+      console.error("Error signing up:", error.message);
+      alert(error.message);
+    }
+  };
 
   return (
     <KeyboardAvoidingView
       style={{ flex: 1 }}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
-      keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
     >
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <LinearGradient
@@ -124,6 +156,10 @@ export default function SignUpForm() {
             >
               <Text style={styles.signUpText}>Sign Up</Text>
             </TouchableOpacity>
+
+            <TouchableOpacity onPress={() => navigation.navigate("LogInForm")}>
+              <Text style={styles.existedAcc}>Already have an account?</Text>
+            </TouchableOpacity>
           </ScrollView>
         </LinearGradient>
       </TouchableWithoutFeedback>
@@ -159,7 +195,7 @@ const styles = StyleSheet.create({
     fontWeight: "400",
     color: "#dcdcdc",
     textAlign: "center",
-    marginBottom: 10,
+    marginBottom: 30,
     top: 15,
   },
   input: {
@@ -192,9 +228,21 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.4,
     shadowRadius: 6,
   },
-  signUpText: {
-    color: "#ffffff",
-    fontWeight: "700",
-    fontSize: 18,
+  signUpText: { color: "#ffffff", fontWeight: "700", fontSize: 18 },
+  existedAcc: { color: "#ffffff", fontWeight: "300", fontSize: 14,marginRight:155,bottom:-1, },
+  orText: { color: "#dcdcdc", fontSize: 16, marginVertical: 20 },
+  googleButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#db4437",
+    paddingVertical: 15,
+    paddingHorizontal: 30,
+    borderRadius: 25,
+    width: "100%",
+    marginBottom: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
   },
+  googleIcon: { width: 25, height: 25, marginRight: 10 },
+  googleText: { color: "#fff", fontWeight: "500", fontSize: 16 },
 });

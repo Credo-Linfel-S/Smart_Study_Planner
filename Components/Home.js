@@ -11,15 +11,18 @@ import {
 import { useNavigation } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { getDatabase, ref, set, get, remove, push } from "firebase/database";
-
+import { LinearGradient } from "expo-linear-gradient";
 export default function Home({ route }) {
   const [isModalVisible, setIsModalVisible] = useState(false);
-  const [username, setUsername] = useState("User");
+  const [username, setUsername] = useState(
+    route.params?.firstName || "Username"
+  );
   const [savedExams, setSavedExams] = useState([]);
   const [greeting, setGreeting] = useState(""); // State for greeting message
   const navigation = useNavigation();
 
   useEffect(() => {
+    console.log("First Name from route:", username);
     // Set greeting based on the time of day
     const currentHour = new Date().getHours();
     if (currentHour >= 5 && currentHour < 12) {
@@ -49,7 +52,11 @@ export default function Home({ route }) {
         if (snapshot.exists()) {
           const exams = Object.entries(snapshot.val()).map(([id, exam]) => ({
             id,
-            ...exam,
+            subject: exam.subject, // Ensure subject exists
+            type: exam.type, // Ensure type exists
+            date: exam.date,
+            time: exam.time,
+            module: exam.module,
           }));
           console.log("Exams:", exams);
           setSavedExams(exams); // Update state with exams
@@ -156,31 +163,30 @@ export default function Home({ route }) {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.greeting}>{greeting} {" "}</Text>
-      {/* Display dynamic greeting */}
+    <LinearGradient
+      colors={["#56465C", "#8A667B", "#5D5979"]}
+      style={styles.gradientContainer} // Apply gradient to full screen
+    >
+      <Text style={styles.greeting}>{greeting}</Text>
       <Text style={styles.nameOfUser}>Welcome, {String(username)}!</Text>
       {savedExams.length > 0 ? (
         <View style={styles.examContainer}>
-          <Text style={styles.examTitle}>Exams List:</Text>
+          <Text style={styles.examTitle}>My Study Schedule List:</Text>
           <FlatList
             data={savedExams}
-            keyExtractor={(item) => item.id}
+            keyExtractor={(item) => `${item.subject}-${item.date}-${item.time}`}
             renderItem={({ item }) => (
               <View style={styles.examCard}>
-                <Text
-                  style={styles.examText}
-                >{`${item.subject} - ${item.type}`}</Text>
+                <Text style={styles.examText}>{item.subject}</Text>
                 <Text
                   style={styles.examText}
                 >{`${item.date} at ${item.time}`}</Text>
-                <Text style={styles.examText}>{`Module: ${item.module}`}</Text>
-
+                <Text style={styles.examText}>{`Chapter: ${item.module}`}</Text>
                 <TouchableOpacity
                   style={styles.deleteButton}
                   onPress={() => deleteExam(item.id)}
                 >
-                  <Text style={styles.deleteButtonText}>Delete</Text>
+                  <Text style={styles.deleteButtonText}>Delete schedule</Text>
                 </TouchableOpacity>
               </View>
             )}
@@ -198,15 +204,13 @@ export default function Home({ route }) {
         animationType="slide"
       >
         <View style={styles.modalContent}>
-          <Text style={styles.modalTitle}>Add new Exam Schedule</Text>
-
+          <Text style={styles.modalTitle}>Add new Study Schedule</Text>
           <TouchableOpacity
             style={styles.optionButton}
             onPress={() => handleMenuSelection("Class")}
           >
-            <Text style={styles.optionText}>Exam Schedule</Text>
+            <Text style={styles.optionText}>Study Schedule</Text>
           </TouchableOpacity>
-
           <TouchableOpacity style={styles.cancelButton} onPress={toggleModal}>
             <Text style={styles.cancelText}>Cancel</Text>
           </TouchableOpacity>
@@ -217,39 +221,39 @@ export default function Home({ route }) {
           <Text style={styles.logoutText}>Logout</Text>
         </TouchableOpacity>
       </View>
-    </View>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  gradientContainer: {
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#F0F8FF",
   },
   greeting: {
     fontSize: 40,
-    fontWeight:800,
+    fontWeight: 800,
     color: "#333",
   },
-  nameOfUser:{
-  fontSize:20,
-  fontWeight:700,
+  nameOfUser: {
+    fontSize: 20,
+    fontWeight: 700,
   },
   examContainer: {
-    width: "90%",
+    width: "85%",
     flex: 1,
-    marginTop: 10,
+    marginTop: 0,
   },
   examTitle: {
+    fontWeight: 1,
     fontSize: 20,
-    fontWeight: "bold",
-    marginBottom: 10,
+    top: 10,
+    marginBottom: 20,
   },
   examCard: {
     padding: 15,
-    backgroundColor: "#FFF",
+    backgroundColor: "#2F8573",
     borderRadius: 5,
     marginBottom: 15,
   },
@@ -258,7 +262,7 @@ const styles = StyleSheet.create({
   },
   deleteButton: {
     marginTop: 10,
-    backgroundColor: "#FF6347",
+    backgroundColor: "#56465C",
     padding: 10,
     borderRadius: 5,
     alignItems: "center",
@@ -269,9 +273,9 @@ const styles = StyleSheet.create({
   },
   addButton: {
     position: "absolute",
-    bottom: 50,
+    bottom: 70,
     right: 20,
-    backgroundColor: "#00C8FF",
+    backgroundColor: "#2F8573",
     width: 60,
     height: 60,
     borderRadius: 30,
@@ -286,49 +290,52 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#FFF",
     padding: 20,
+    backgroundColor: "#93697B",
   },
   modalTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
+    fontSize: 24,
+    fontWeight: 700,
     marginBottom: 20,
   },
   optionButton: {
-    backgroundColor: "#00C8FF",
-    width: 200,
+    backgroundColor: "#087E8B",
+    width: 250,
     padding: 15,
-    marginBottom: 10,
     borderRadius: 5,
-    alignItems: "center",
+    marginBottom: 20,
   },
   optionText: {
-    fontSize: 18,
     color: "#FFF",
+    fontSize: 18,
+    textAlign: "center",
   },
   cancelButton: {
-    backgroundColor: "#FF6347",
+    backgroundColor: "#56465C",
+    width: 250,
     padding: 15,
     borderRadius: 5,
-    alignItems: "center",
   },
   cancelText: {
     color: "#FFF",
     fontSize: 18,
+    textAlign: "center",
   },
   buttonContainer: {
     position: "absolute",
-    bottom: 20,
+    bottom: 10,
     width: "100%",
     alignItems: "center",
   },
   logoutButton: {
-    backgroundColor: "#FF6347",
+    backgroundColor: "rgba(255, 255, 255, 0.15)",
     padding: 15,
+    width: "80%",
     borderRadius: 5,
   },
   logoutText: {
     color: "#FFF",
     fontSize: 18,
+    textAlign: "center",
   },
 });
