@@ -5,13 +5,13 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import LogInForm from "../Components/LogInForm";
 import Home from "../Components/Home";
 import SignUpForm from "../Components/SignUpForm";
-import Class from "../Components/Routes/Class";
+import Class from "../Components/Class";
 import { GoogleSignin } from "@react-native-google-signin/google-signin";
-import Testing from "../Components/Testing"
+
 // Configure Google Sign-In
 GoogleSignin.configure({
   webClientId:
-    "105140411604-2f9b4v2r0g2hdccf6q2i9p9go704mra1.apps.googleusercontent.com", // Replace with your actual Web Client ID from Google Cloud Console
+    "105140411604-2f9b4v2r0g2hdccf6q2i9p9go704mra1.apps.googleusercontent.com",
   offlineAccess: true,
 });
 
@@ -42,7 +42,7 @@ const index = () => {
   const Stack = createNativeStackNavigator();
 
   return (
-    <Stack.Navigator initialRouteName="Home">
+    <Stack.Navigator initialRouteName="LogInForm">
       <Stack.Screen
         name="LogInForm"
         component={LogInForm}
@@ -51,11 +51,6 @@ const index = () => {
       <Stack.Screen
         name="Home"
         component={Home}
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen
-        name="Testing"
-        component={Testing}
         options={{ headerShown: false }}
       />
       <Stack.Screen

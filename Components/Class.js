@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import {
-  View,
   Text,
   TextInput,
   TouchableOpacity,
@@ -12,8 +11,21 @@ import {
 import { useNavigation } from "@react-navigation/native";
 import { getDatabase, ref, set, push } from "firebase/database";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { format, parse } from "date-fns"; // Using date-fns to ensure correct parsing
+import { format, parse } from "date-fns";
 import { LinearGradient } from "expo-linear-gradient";
+// Importing Audio module
+import { Audio } from "expo-av";
+
+Audio.setAudioModeAsync({
+  allowsRecordingIOS: false,
+  playsInSilentModeIOS: true,
+  staysActiveInBackground: false,
+  interruptionModeIOS: Audio.INTERRUPTION_MODE_IOS_DO_NOT_MIX,
+  interruptionModeAndroid: Audio.INTERRUPTION_MODE_ANDROID_DO_NOT_MIX,
+  shouldDuckAndroid: true,
+  playThroughEarpieceAndroid: false,
+});
+
 const Class = ({ route }) => {
   const [subject, setSubject] = useState("");
   const [module, setModule] = useState("");
@@ -30,6 +42,7 @@ const Class = ({ route }) => {
       Alert.alert("Error", "Please fill in all required fields.");
       return;
     }
+
     const dateRegex = /^(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])-(\d{4})$/;
     if (!dateRegex.test(date)) {
       Alert.alert(
@@ -63,69 +76,50 @@ const Class = ({ route }) => {
 
       startExamTimeCheck(date, time, duration);
     } catch (error) {
-      Alert.alert("Error", "Failed to save exam. Please try again.");
+      Alert.alert("Error", "Failed to save Study Schedule. Please try again.");
     }
   };
 
-  useEffect(() => {
-    if (route.params?.savedExam) {
-      setSavedExams((prevExams) => [...prevExams, route.params.savedExam]);
+  const playSound = async () => {
+    const sound = new Audio.Sound();
+    try {
+      await sound.loadAsync(require("./assets/notification.mp3")); // Replace with your sound file path
+      await sound.playAsync();
+    } catch (error) {
+      console.error("Error playing sound:", error);
+    } finally {
+      // Unload the sound after playing
+      sound.unloadAsync();
     }
-  }, [route.params?.savedExam]);
-
-  const handleCancel = () => {
-    navigation.navigate("Home");
-  };
-
-  const formatDateInput = (inputDate) => {
-    setDate(inputDate);
-  };
-
-  const convertTo24HourFormat = (time12h) => {
-    const [time, modifier] = time12h.split(/(AM|PM)/i);
-    let [hours, minutes] = time.split(":").map(Number);
-
-    if (modifier.toUpperCase() === "PM" && hours < 12) {
-      hours += 12;
-    } else if (modifier.toUpperCase() === "AM" && hours === 12) {
-      hours = 0; // Midnight case
-    }
-
-    return `${hours}:${minutes < 10 ? `0 ${minutes}` : minutes}`;
   };
 
   const startExamTimeCheck = (examDate, examTime, examDuration) => {
-    const examTime24h = convertTo24HourFormat(examTime); // Convert to 24-hour format
+    const examTime24h = convertTo24HourFormat(examTime);
     const examDateTimeString = `${examDate} ${examTime24h}`;
-
     const examDateTime = parse(
       examDateTimeString,
       "MM-dd-yyyy HH:mm",
       new Date()
     );
 
-    // Check if parsing was successful
     if (isNaN(examDateTime)) {
       console.error("Failed to parse exam date/time:", examDateTimeString);
       Alert.alert("Error", "Invalid exam date or time.");
       return;
     }
 
-    const durationInMs = parseInt(examDuration) * 60 * 1000;
-
     const interval = setInterval(() => {
-      const now = new Date(); // Get the current system time
+      const now = new Date();
       const timeRemaining = examDateTime - now;
-
-      console.log("Current Time:", now); // Log current time for debugging
-      console.log("Exam Time:", examDateTime); // Log exam time for debugging
 
       if (timeRemaining <= 0 && !examTimeReached) {
         clearInterval(interval);
         setExamTimeReached(true);
-        // Vibrate longer and in a repeated pattern
-        Vibration.vibrate([500, 1000, 500, 1000, 500, 1000]); // Longer and repeated vibration
-        Alert.alert("Exam Time", `"It's time for your ${subject} exam!"`); // Show Alert
+
+        // Vibrate and play sound
+        Vibration.vibrate([500, 1000, 500, 1000, 500, 1000]);
+        playSound();
+        Alert.alert("Exam Time", `It's time for your ${subject} study!`);
       }
 
       const hours = Math.floor(timeRemaining / (1000 * 60 * 60));
@@ -137,10 +131,24 @@ const Class = ({ route }) => {
       setCountdown(`${hours}:${minutes}:${seconds}`);
     }, 1000);
   };
+
+  const convertTo24HourFormat = (time12h) => {
+    const [time, modifier] = time12h.split(/(AM|PM)/i);
+    let [hours, minutes] = time.split(":").map(Number);
+
+    if (modifier.toUpperCase() === "PM" && hours < 12) {
+      hours += 12;
+    } else if (modifier.toUpperCase() === "AM" && hours === 12) {
+      hours = 0;
+    }
+
+    return `${hours}:${minutes < 10 ? `0${minutes}` : minutes}`;
+  };
+
   return (
     <LinearGradient
       colors={["#56465C", "#8A667B", "#5D5979"]}
-      style={styles.gradientContainer} // Apply gradient to full screen
+      style={styles.gradientContainer}
     >
       <ScrollView contentContainerStyle={styles.container}>
         <Text style={styles.header}>Set Study Schedule</Text>
@@ -161,8 +169,7 @@ const Class = ({ route }) => {
           style={styles.input}
           placeholder="Date (MM-DD-YYYY)"
           value={date}
-          onChangeText={formatDateInput}
-          keyboardType="numeric"
+          onChangeText={setDate}
         />
         <TextInput
           style={styles.input}
@@ -171,12 +178,14 @@ const Class = ({ route }) => {
           onChangeText={setTime}
         />
 
-        {/* Countdown Display */}
         {countdown && !examTimeReached && (
           <Text style={styles.countdown}>Countdown: {countdown}</Text>
         )}
 
-        <TouchableOpacity style={styles.Cancel} onPress={handleCancel}>
+        <TouchableOpacity
+          style={styles.Cancel}
+          onPress={() => navigation.navigate("Home")}
+        >
           <Text style={styles.CancelText}>Cancel</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.saveExam} onPress={handleSaveExam}>
@@ -185,7 +194,7 @@ const Class = ({ route }) => {
 
         {examTimeReached && (
           <Text style={styles.notification}>
-            It's time for your {subject} exam!
+            It's time for your {subject} study!
           </Text>
         )}
       </ScrollView>
@@ -239,5 +248,6 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
 });
+
 
 export default Class;
