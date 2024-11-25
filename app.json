@@ -4,6 +4,9 @@
     "slug": "Smart_Study_Planner",
     "scheme": "Smart_Study_Planner",
     "version": "1.0.0",
+    "assetBundlePatterns": [
+      "Components/assets/notification.mp3"
+    ],
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -17,7 +20,11 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
-    "plugins": ["@react-native-google-signin/google-signin", "expo-router"],
+    "plugins": [
+      "@react-native-google-signin/google-signin",
+      "expo-router",
+      "expo-asset"
+    ],
     "ios": {
       "supportsTablet": true
     },
@@ -26,7 +33,7 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff",
         "googleServicesFile": "./google-services.json",
-        "permissions": ["INTERNET"]
+        "permissions": ["INTERNET", "READ_EXTERNAL_STORAGE", "WRITE_EXTERNAL_STORAGE"]
       },
       "package": "com.Linfel.Smart_Study_Planner"
     },

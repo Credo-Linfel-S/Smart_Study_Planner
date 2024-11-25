@@ -18,7 +18,8 @@ import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth, db } from "./firebaseConfig";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useNavigation } from "@react-navigation/native";
-import { ref, get } from "firebase/database"; // Import Realtime Database functions
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { ref, get } from "firebase/database"; 
 WebBrowser.maybeCompleteAuthSession();
 
 const LogInForm = () => {
@@ -113,6 +114,7 @@ const LogInForm = () => {
             {/* Log In Button */}
             <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
               <Text style={styles.loginText}>Log In</Text>
+              <MaterialIcons name="login" size={24} color="black" marginRight={80}marginBottom={-20}top={-23}/>
             </TouchableOpacity>
 
             {/* Account Options */}

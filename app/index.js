@@ -5,10 +5,12 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import LogInForm from "../Components/LogInForm";
 import Home from "../Components/Home";
 import SignUpForm from "../Components/SignUpForm";
-import Class from "../Components/Class";
+import StudySchedule from "../Components/Routes/StudySchedule";
+//import ExamSchedule from "../Components/Routes/ExamSchedule";
 import { GoogleSignin } from "@react-native-google-signin/google-signin";
+import ExamSchedule from "../Components/Routes/ExamSchedule";
+import Activities from "../Components/TabNavigator/Activities";
 
-// Configure Google Sign-In
 GoogleSignin.configure({
   webClientId:
     "105140411604-2f9b4v2r0g2hdccf6q2i9p9go704mra1.apps.googleusercontent.com",
@@ -49,20 +51,31 @@ const index = () => {
         options={{ headerShown: false }}
       />
       <Stack.Screen
+        name="SignUpForm"
+        component={SignUpForm}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
         name="Home"
         component={Home}
         options={{ headerShown: false }}
       />
       <Stack.Screen
-        name="Class"
-        component={Class}
+        name="StudySchedule"
+        component={StudySchedule}
         options={{ headerShown: false }}
       />
       <Stack.Screen
-        name="SignUpForm"
-        component={SignUpForm}
+        name="ExamSchedule"
+        component={ExamSchedule}
         options={{ headerShown: false }}
       />
+      <Stack.Screen
+        name="Activities"
+        component={Activities}
+        options={{ headerShown: false }}
+      />
+   
     </Stack.Navigator>
   );
 };
