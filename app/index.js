@@ -6,7 +6,7 @@ import LogInForm from "../Components/LogInForm";
 import Home from "../Components/Home";
 import SignUpForm from "../Components/SignUpForm";
 import StudySchedule from "../Components/Routes/StudySchedule";
-//import ExamSchedule from "../Components/Routes/ExamSchedule";
+
 import { GoogleSignin } from "@react-native-google-signin/google-signin";
 import ExamSchedule from "../Components/Routes/ExamSchedule";
 import Activities from "../Components/TabNavigator/Activities";

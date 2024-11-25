@@ -59,6 +59,7 @@ export default function Activities({ route }) {
             date: exam.date,
             time: exam.time,
             module: exam.module,
+            room: exam.room,
             audioUri: exam.audioUri,
           }));
           console.log(`Exams ${savedExams.length} found for this user.`);
@@ -71,7 +72,7 @@ export default function Activities({ route }) {
         console.log("Error loading studies:", error);
       }
     };
-
+ 
     loadExams();
 
     const loadStudies = async () => {
@@ -173,7 +174,8 @@ export default function Activities({ route }) {
     navigation.navigate(routeName);
   };
 
-
+console.log(`Exam Schedules ${savedExams.length} found for this user.`);
+console.log(`Study Schedules ${savedStudies.length} found for this user.`);
   return (
     <View style={styles.container}>
       <LinearGradient
@@ -238,14 +240,16 @@ export default function Activities({ route }) {
                 keyExtractor={(item) => item.id}
                 renderItem={({ item }) => (
                   <View style={styles.examCard}>
-                    <Text style={styles.examText}>{item.subject}</Text>
+                    <Text style={styles.examText}>{`Subject: ${item.subject}`}</Text>
                     <Text
                       style={styles.examText}
                     >{`${item.date} at ${item.time}`}</Text>
                     <Text
                       style={styles.examText}
                     >{`Chapter: ${item.module}`}</Text>
-
+                    <Text
+                      style={styles.examText}
+                    >{`Room: ${item.room}`}</Text>
                     <TouchableOpacity
                       style={styles.deleteButton2}
                       onPress={() => deleteExam(item.id)}
