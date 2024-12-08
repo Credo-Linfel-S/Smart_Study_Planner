@@ -1,3 +1,4 @@
+import { StatusBar } from "expo-status-bar";
 import {
   StyleSheet,
   Text,
@@ -11,15 +12,29 @@ import {
   Keyboard,
   Platform,
 } from "react-native";
-import React, { useState } from "react";
+import {
+  GoogleSignin,
+  GoogleSigninButton,
+} from "@react-native-google-signin/google-signin";
+import React, { useState, useEffect } from "react";
 import { LinearGradient } from "expo-linear-gradient";
 import * as WebBrowser from "expo-web-browser";
-import { signInWithEmailAndPassword } from "firebase/auth";
-import { auth, db } from "./firebaseConfig";
+import {
+  signInWithEmailAndPassword,
+  getAuth,
+  signInWithCredential,
+  GoogleAuthProvider,
+} from "firebase/auth";
+import { firebaseConfig, auth, db } from "./firebaseConfig"; // auth is imported from firebaseConfig
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useNavigation } from "@react-navigation/native";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import { ref, get } from "firebase/database"; 
+import { getDatabase, ref, get, set } from "firebase/database";
+
+import { getApp, initializeApp } from "firebase/app";
+
+// Initialize Firebase only if it is not initialized already
+const app = getApp() || initializeApp(firebaseConfig);
 WebBrowser.maybeCompleteAuthSession();
 
 const LogInForm = () => {
@@ -27,6 +42,55 @@ const LogInForm = () => {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const navigation = useNavigation();
+
+  const [userInfo, setUserInfo] = useState();
+
+  useEffect(() => {
+    GoogleSignin.configure({
+      webClientId:
+        "105140411604-2f9b4v2r0g2hdccf6q2i9p9go704mra1.apps.googleusercontent.com",
+    });
+  }, []);
+
+  const signin = async () => {
+    try {
+      await GoogleSignin.hasPlayServices();
+      const user = await GoogleSignin.signIn();
+
+      // Firebase authentication
+      const { idToken } = await GoogleSignin.getTokens();
+      const googleCredential = GoogleAuthProvider.credential(idToken);
+
+      const firebaseUser = await signInWithCredential(auth, googleCredential);
+
+      setUserInfo(firebaseUser.user);
+      setError(null);
+
+      // Extract the first name from the user's display name (assuming the displayName is in "First Last" format)
+      const firstNameFromGoogle = firebaseUser.user.displayName.split(" ")[0];
+
+      // Ensure that the firebaseUser.uid is used to reference the correct user in the database
+      const database = getDatabase();
+      const userRef = ref(database, `users/${firebaseUser.user.uid}`); // Use firebaseUser.uid here
+      await set(userRef, {
+        username: firstNameFromGoogle, // Store the first name
+        email: firebaseUser.user.email,
+      });
+
+      // Save the user's first name and email in AsyncStorage
+      await AsyncStorage.setItem("firstName", firstNameFromGoogle);
+      await AsyncStorage.setItem("email", firebaseUser.user.email);
+
+      // Navigate to Home screen and pass the first name as a parameter
+      navigation.navigate("Home", {
+        firstName: firstNameFromGoogle,
+        email: firebaseUser.user.email, // Pass the first name to the Home screen
+      });
+    } catch (e) {
+      setError(e.message || "An error occurred during sign-in.");
+      console.error(e);
+    }
+  };
 
   // Async function for handling login
   const handleLogin = async () => {
@@ -89,10 +153,8 @@ const LogInForm = () => {
               source={require("./assets/SmartStudy.png")}
               style={styles.logo}
             />
-
             {/* Welcome Message */}
             <Text style={styles.welcomeText}>Welcome back Student!</Text>
-
             {/* Email and Password Inputs */}
             <TextInput
               placeholder="Email"
@@ -107,16 +169,20 @@ const LogInForm = () => {
               style={styles.input}
               secureTextEntry
             />
-
             {/* Error Message */}
             {error ? <Text style={styles.errorText}>{error}</Text> : null}
-
             {/* Log In Button */}
             <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
               <Text style={styles.loginText}>Log In</Text>
-              <MaterialIcons name="login" size={24} color="black" marginRight={80}marginBottom={-20}top={-23}/>
+              <MaterialIcons
+                name="login"
+                size={24}
+                color="black"
+                marginRight={80}
+                marginBottom={-20}
+                top={-23}
+              />
             </TouchableOpacity>
-
             {/* Account Options */}
             <View style={styles.accountOptions}>
               <TouchableOpacity
@@ -126,6 +192,17 @@ const LogInForm = () => {
                   Don’t have an account yet?
                 </Text>
               </TouchableOpacity>
+            </View>
+            <View style={styles.container}>
+              <Text>{error && `Error: ${error}`}</Text>
+              {!userInfo && (
+                <GoogleSigninButton
+                  size={GoogleSigninButton.Size.Standard}
+                  color={GoogleSigninButton.Color.Dark}
+                  onPress={signin}
+                />
+              )}
+              <StatusBar style="auto" />
             </View>
           </ScrollView>
         </LinearGradient>

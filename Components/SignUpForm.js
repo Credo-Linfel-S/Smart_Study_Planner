@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { StatusBar } from "expo-status-bar";
 import {
   Text,
   TextInput,
@@ -14,17 +15,78 @@ import {
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
-import {
+import {getAuth,
   createUserWithEmailAndPassword,
   GoogleAuthProvider,
   signInWithCredential,
 } from "firebase/auth";
-import { auth } from "./firebaseConfig";
+import {
+  GoogleSignin,
+  GoogleSigninButton,
+} from "@react-native-google-signin/google-signin";
+
+import { getApp, initializeApp } from "firebase/app";
+import { firebaseConfig } from "./firebaseConfig";
 import { getDatabase, ref, set } from "firebase/database";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Google from "expo-auth-session";
-
+const app = getApp() || initializeApp(firebaseConfig);
+const auth = getAuth(app);
 export default function SignUpForm() {
+
+ const [error, setError] = useState();
+ const [userInfo, setUserInfo] = useState();
+ //const navigation = useNavigation(); // Initialize navigation
+
+ useEffect(() => {
+   GoogleSignin.configure({
+     webClientId:
+       "105140411604-2f9b4v2r0g2hdccf6q2i9p9go704mra1.apps.googleusercontent.com",
+   });
+ }, []);
+
+ const signin = async () => {
+   try {
+  
+     await GoogleSignin.hasPlayServices();
+     const user = await GoogleSignin.signIn();
+
+     // Firebase authentication
+     const { idToken } = await GoogleSignin.getTokens();
+     const googleCredential = GoogleAuthProvider.credential(idToken);
+
+     const firebaseUser = await signInWithCredential(auth, googleCredential);
+
+     setUserInfo(firebaseUser.user);
+     setError(null);
+
+     // Extract the first name from the user's display name (assuming the displayName is in "First Last" format)
+     const firstNameFromGoogle = firebaseUser.user.displayName.split(" ")[0];
+
+     // Ensure that the firebaseUser.uid is used to reference the correct user in the database
+     const database = getDatabase();
+     const userRef = ref(database, `users/${firebaseUser.user.uid}`); // Use firebaseUser.uid here
+     await set(userRef, {
+       username: firstNameFromGoogle, // Store the first name
+       email: firebaseUser.user.email,
+     });
+
+     // Save the user's first name and email in AsyncStorage
+     await AsyncStorage.setItem("firstName", firstNameFromGoogle);
+     await AsyncStorage.setItem("email", firebaseUser.user.email);
+     // Save user data
+  
+
+     // Navigate to Home screen and pass the first name as a parameter
+     navigation.navigate("Home", {
+       firstName: firstNameFromGoogle,
+       email: firebaseUser.user.email, // Pass the first name to the Home screen
+     });
+   } catch (e) {
+     setError(e.message || "An error occurred during sign-in.");
+     console.error(e);
+   }
+ };  
   const [firstName, setFirstName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -39,55 +101,12 @@ export default function SignUpForm() {
     }),
   });
 
-  useEffect(() => {
-    if (response?.type === "success") {
-      const { id_token } = response.params;
-
-      const handleGoogleSignUp = async () => {
-        try {
-          const googleCredential = GoogleAuthProvider.credential(id_token);
-          const userCredential = await signInWithCredential(
-            auth,
-            googleCredential
-          );
-          const user = userCredential.user;
-
-          // Get user's first name (from displayName or givenName if available)
-          const firstNameFromGoogle = user.displayName?.split(" ")[0] || "User"; // Fallback to "User" if no name
-
-          // Save user data to AsyncStorage
-          await AsyncStorage.setItem(
-            "user",
-            JSON.stringify({ username: firstNameFromGoogle, email: user.email })
-          );
-
-          // Save user data to Firebase Database
-          const database = getDatabase();
-          const userRef = ref(database, `users/${user.uid}`);
-          await set(userRef, {
-            username: firstNameFromGoogle,
-            email: user.email,
-          });
-
-          console.log("User signed in with Google:", user.uid);
-          navigation.navigate("Home", {
-            user: { username: firstNameFromGoogle, email: user.email },
-          });
-        } catch (error) {
-          console.error("Error signing in with Google:", error.message);
-          alert("Google Sign-In failed. Please try again.");
-        }
-      };
-
-      handleGoogleSignUp();
-    }
-  }, [response, navigation]);
-
   const handleSignUp = async () => {
     if (!firstName || !email || !password) {
       alert("Please fill in all fields.");
       return;
     }
+
 
     try {
       await AsyncStorage.setItem(
@@ -96,6 +115,7 @@ export default function SignUpForm() {
       );
       const userCredential = await createUserWithEmailAndPassword(
         auth,
+        
         email,
         password
       );
@@ -160,6 +180,17 @@ export default function SignUpForm() {
             <TouchableOpacity onPress={() => navigation.navigate("LogInForm")}>
               <Text style={styles.existedAcc}>Already have an account?</Text>
             </TouchableOpacity>
+            <View style={styles.container1}>
+              <Text>{error && `Error: ${error}`}</Text>
+              {!userInfo && (
+                <GoogleSigninButton
+                  size={GoogleSigninButton.Size.Standard}
+                  color={GoogleSigninButton.Color.Dark}
+                  onPress={signin}
+                />
+              )}
+              <StatusBar style="auto" />
+            </View>
           </ScrollView>
         </LinearGradient>
       </TouchableWithoutFeedback>
@@ -168,6 +199,12 @@ export default function SignUpForm() {
 }
 
 const styles = StyleSheet.create({
+  container1: {
+    
+  
+    alignItems: "center",
+    justifyContent: "center",
+  },
   container: {
     flex: 1,
     alignItems: "center",
@@ -229,7 +266,13 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
   },
   signUpText: { color: "#ffffff", fontWeight: "700", fontSize: 18 },
-  existedAcc: { color: "#ffffff", fontWeight: "300", fontSize: 14,marginRight:155,bottom:-1, },
+  existedAcc: {
+    color: "#ffffff",
+    fontWeight: "300",
+    fontSize: 14,
+    marginRight: 155,
+    bottom: -1,
+  },
   orText: { color: "#dcdcdc", fontSize: 16, marginVertical: 20 },
   googleButton: {
     flexDirection: "row",

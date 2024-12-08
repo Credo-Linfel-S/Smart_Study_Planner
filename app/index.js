@@ -5,11 +5,13 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import LogInForm from "../Components/LogInForm";
 import Home from "../Components/Home";
 import SignUpForm from "../Components/SignUpForm";
-import StudySchedule from "../Components/Routes/StudySchedule";
-
+import StudySchedule from "../Routes/StudySchedule";
 import { GoogleSignin } from "@react-native-google-signin/google-signin";
-import ExamSchedule from "../Components/Routes/ExamSchedule";
+import ExamSchedule from "../Routes/ExamSchedule";
 import Activities from "../Components/TabNavigator/Activities";
+
+import EditStudySchedule from "../Mods/EditStudySchedule";
+import EditExamSchedule from "../Mods/EditExamSchedule";
 
 GoogleSignin.configure({
   webClientId:
@@ -40,16 +42,18 @@ export const handleLogout = async (navigation) => {
 };
 
 // Stack Navigator
-const index = () => {
+const index= () => {
   const Stack = createNativeStackNavigator();
 
   return (
-    <Stack.Navigator initialRouteName="LogInForm">
+    <Stack.Navigator initialRouteName="Home">
       <Stack.Screen
         name="LogInForm"
         component={LogInForm}
         options={{ headerShown: false }}
       />
+   
+   
       <Stack.Screen
         name="SignUpForm"
         component={SignUpForm}
@@ -75,9 +79,17 @@ const index = () => {
         component={Activities}
         options={{ headerShown: false }}
       />
-   
+      <Stack.Screen
+        name="EditStudySchedule"
+        component={EditStudySchedule}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="EditExamSchedule"
+        component={EditExamSchedule}
+        options={{ headerShown: false }}
+      />
     </Stack.Navigator>
   );
 };
-
 export default index;

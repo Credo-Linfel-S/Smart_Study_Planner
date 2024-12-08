@@ -7,6 +7,7 @@ import {
   Modal,
   Alert,
   FlatList,
+  Animated,
   Image,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
@@ -22,8 +23,9 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 export default function Home({ route }) {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [username, setUsername] = useState(
-    route.params?.firstName || "Username"
+    route.params?.firstName || "Guest" //route.params?.username ||
   );
+
   const [savedStudies, setSavedStudies] = useState([]);
   const [savedExams, setSavedExams] = useState([]);
   const [greeting, setGreeting] = useState(""); // State for greeting message
@@ -31,7 +33,7 @@ export default function Home({ route }) {
   const [currentPlayingAudio, setCurrentPlayingAudio] = useState(null);
   const [currentSound, setCurrentSound] = useState(null);
   const [currentDate, setCurrentDate] = useState("");
-
+  const [rotation, setRotation] = useState(new Animated.Value(0));
   const stopAudio = async () => {
     if (currentSound) {
       await currentSound.stopAsync();
@@ -42,6 +44,7 @@ export default function Home({ route }) {
   };
   useEffect(() => {
     console.log("First Name from route:", username);
+
     // Set greeting based on the time of day
     const currentHour = new Date().getHours();
     if (currentHour >= 5 && currentHour < 12) {
@@ -61,54 +64,54 @@ export default function Home({ route }) {
     }).format(today);
     setCurrentDate(formattedDate);
 
-    // Load user data from AsyncStorage
-    const loadStudies = async () => {
-      try {
-        const userData = await AsyncStorage.getItem("user");
-        const parsedUser = userData ? JSON.parse(userData) : null;
-        const username = parsedUser ? parsedUser.username : "Guest";
+  const loadStudies = async () => {
+    try {
+      const userData = await AsyncStorage.getItem("user");
+      const parsedUser = userData ? JSON.parse(userData) : null;
+      const username = parsedUser ? parsedUser.username : "Guest";
 
-        console.log("Username:", username);
+      console.log("Username:", username);
 
-        // Fetch Studies from Firebase for the user
-        const db = getDatabase();
-        const studiesRef = ref(db, `study/${username}`);
-        const snapshot = await get(studiesRef);
+      // Fetch Studies from Firebase for the user
+      const db = getDatabase();
+      const studiesRef = ref(db, `study/${username}`);
+      const snapshot = await get(studiesRef);
 
-        if (snapshot.exists()) {
-          const studies = Object.entries(snapshot.val()).map(([id, study]) => ({
-            id,
-            subject: study.subject, // Ensure subject exists
-            type: study.type, // Ensure type exists
-            date: study.date,
-            time: study.time,
-            module: study.module,
-            audioUri: study.audioUri,
-          }));
-          console.log(`Studies ${savedStudies.length} found for this user.`);
-          console.log("Studies:", studies);
-          setSavedStudies(studies); // Update state with studies
-        } else {
-          console.log(`No studies ${savedStudies.length} found for this user.`);
-        }
-      } catch (error) {
-        console.log("Error loading studies:", error);
+      if (snapshot.exists()) {
+        const studies = Object.entries(snapshot.val()).map(([id, study]) => ({
+          id,
+          subject: study.subject, // Ensure subject exists
+          type: study.type, // Ensure type exists
+          date: study.date,
+          time: study.time,
+          module: study.module,
+          audioUri: study.audioUri,
+        }));
+        console.log(`Studies ${savedStudies.length} found for this user.`);
+        console.log("Studies:", studies);
+        setSavedStudies(studies); // Update state with studies
+      } else {
+        console.log(`No studies ${savedStudies.length} found for this user.`);
       }
-    };
+    } catch (error) {
+      console.log("Error loading studies:", error);
+    }
+  };
 
-    loadStudies();
+  loadStudies();
+
 
     const loadExams = async () => {
       try {
         const userData = await AsyncStorage.getItem("user");
         const parsedUser = userData ? JSON.parse(userData) : null;
-        const username = parsedUser ? parsedUser.username : "Guest";
-
-        console.log("Username:", username);
+        const username = parsedUser ? parsedUser.username : "User";
+const firstName = parsedUser ? parsedUser.firstName : "User";
+        console.log("Username:", firstName);
 
         // Fetch Studies from Firebase for the user
         const db = getDatabase();
-        const examsRef = ref(db, `exams/${username}`);
+        const examsRef = ref(db, `exam/${username}`);
         const snapshot = await get(examsRef);
 
         if (snapshot.exists()) {
@@ -119,6 +122,7 @@ export default function Home({ route }) {
             date: exam.date,
             time: exam.time,
             module: exam.module,
+            room: exam.room,
             audioUri: exam.audioUri,
           }));
           console.log(`Exams ${savedExams.length} found for this user.`);
@@ -151,21 +155,29 @@ export default function Home({ route }) {
 
   // Modal toggle
   const toggleModal = () => {
-    setIsModalVisible(!isModalVisible);
+    Animated.timing(rotation, {
+      toValue: 1, // Rotate 360 degrees (1 full circle)
+      duration: 500,
+      useNativeDriver: true,
+    }).start(() => {
+      rotation.setValue(0);
+      setIsModalVisible(!isModalVisible);
+    });
+  };
+  const handleCancel = () => {
+    Animated.timing(rotation, {
+      toValue: 0,
+      duration: 600,
+      useNativeDriver: true,
+    }).start();
+    setIsModalVisible(false);
   };
 
-  // Handle menu selection
   const handleMenuSelection = (routeName) => {
     setIsModalVisible(false);
     navigation.navigate(routeName);
   };
 
-
-
- 
-
- 
- 
   const handleLogout = async () => {
     try {
       await AsyncStorage.removeItem("user");
@@ -174,31 +186,42 @@ export default function Home({ route }) {
       Alert.alert("Error", "Failed to log out. Please try again.");
     }
   };
+  // Initialize rotation value
 
+  // Rotate animation function
+
+  // Interpolate rotation value to create a 360-degree effect
+  const rotate = rotation.interpolate({
+    inputRange: [0, 1],
+    outputRange: ["0deg", "90deg"],
+  });
   return (
     <LinearGradient
       colors={["#56465C", "#8A667B", "#5D5979"]}
       style={styles.gradientContainer} // Apply gradient to full screen
     >
       <Text style={styles.greeting}>{greeting}</Text>
-      <Text style={styles.nameOfUser}>Welcome, {String(username)}!</Text>
+      <Text style={styles.nameOfUser}>
+        Welcome, {String(username)}!
+      </Text>
       <Text style={styles.dateText}>{currentDate}</Text>
-
       {/* Study button with the count of study schedules */}
-      <TouchableOpacity style={styles.StudyButton}>
-        <Text>{`${savedStudies.length} Study `}</Text>
-      </TouchableOpacity>
 
-      <TouchableOpacity style={styles.ExamButton}>
-        <Text>{`${savedExams.length} Exam `}</Text>
-      </TouchableOpacity>
+      <Text style={styles.StudyButton}>{`${savedStudies.length} Study `}</Text>
+
+      <Text style={styles.ExamButton}>{`${savedExams.length} Exam `}</Text>
+
       <Image
         source={require("../Components/assets/Study.png")}
         style={styles.Image}
       />
+
       <TouchableOpacity style={styles.addButton} onPress={toggleModal}>
-        <Ionicons name="menu" size={24} color="black" />
+        <Animated.View style={{ transform: [{ rotate }] }}>
+          <Ionicons name="menu" size={24} color="black" />
+        </Animated.View>
       </TouchableOpacity>
+
       <Modal
         visible={isModalVisible}
         onRequestClose={toggleModal}
@@ -248,7 +271,7 @@ export default function Home({ route }) {
               left={20}
             />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.cancelButton} onPress={toggleModal}>
+          <TouchableOpacity style={styles.cancelButton} onPress={handleCancel}>
             <Text style={styles.cancelText}>Cancel</Text>
             <MaterialIcons
               name="cancel"
@@ -336,6 +359,7 @@ const styles = StyleSheet.create({
     fontWeight: 700,
     marginBottom: 20,
   },
+
   optionButton: {
     backgroundColor: "#087E8B",
     width: 250,
@@ -349,7 +373,6 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   cancelButton: {
-
     backgroundColor: "#56465C",
     width: 250,
     padding: 15,

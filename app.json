@@ -15,6 +15,9 @@
       "icon": "./assets/splash-icon.png",
       "color": "#000000"
     },
+    "scripts":{
+      "postinstall": "patch-package"
+    },
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
@@ -33,7 +36,14 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff",
         "googleServicesFile": "./google-services.json",
-        "permissions": ["INTERNET", "READ_EXTERNAL_STORAGE", "WRITE_EXTERNAL_STORAGE"]
+
+        "permissions": [
+          "INTERNET",
+          "READ_EXTERNAL_STORAGE",
+          "WRITE_EXTERNAL_STORAGE","android.permission.RECORD_AUDIO", "android.permission.VIBRATE"
+        ],
+        
+       /// "blockedPermissions": ["android.permission.RECORD_AUDIO"]
       },
       "package": "com.Linfel.Smart_Study_Planner"
     },
