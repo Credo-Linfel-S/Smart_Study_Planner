@@ -15,7 +15,8 @@ import {
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
-import {getAuth,
+import {
+  getAuth,
   createUserWithEmailAndPassword,
   GoogleAuthProvider,
   signInWithCredential,
@@ -33,60 +34,56 @@ import * as Google from "expo-auth-session";
 const app = getApp() || initializeApp(firebaseConfig);
 const auth = getAuth(app);
 export default function SignUpForm() {
+  const [error, setError] = useState();
+  const [userInfo, setUserInfo] = useState();
 
- const [error, setError] = useState();
- const [userInfo, setUserInfo] = useState();
+  useEffect(() => {
+    GoogleSignin.configure({
+      webClientId:
+        "105140411604-2f9b4v2r0g2hdccf6q2i9p9go704mra1.apps.googleusercontent.com",
+    });
+  }, []);
 
+  const signin = async () => {
+    try {
+      await GoogleSignin.hasPlayServices();
+      const user = await GoogleSignin.signIn();
 
- useEffect(() => {
-   GoogleSignin.configure({
-     webClientId:
-       "105140411604-2f9b4v2r0g2hdccf6q2i9p9go704mra1.apps.googleusercontent.com",
-   });
- }, []);
+      // Firebase authentication
+      const { idToken } = await GoogleSignin.getTokens();
+      const googleCredential = GoogleAuthProvider.credential(idToken);
 
- const signin = async () => {
-   try {
-  
-     await GoogleSignin.hasPlayServices();
-     const user = await GoogleSignin.signIn();
+      const firebaseUser = await signInWithCredential(auth, googleCredential);
 
-     // Firebase authentication
-     const { idToken } = await GoogleSignin.getTokens();
-     const googleCredential = GoogleAuthProvider.credential(idToken);
+      setUserInfo(firebaseUser.user);
+      setError(null);
 
-     const firebaseUser = await signInWithCredential(auth, googleCredential);
+      // Extract the first name from the user's display name (assuming the displayName is in "First Last" format)
+      const firstNameFromGoogle = firebaseUser.user.displayName.split(" ")[0];
 
-     setUserInfo(firebaseUser.user);
-     setError(null);
+      // Ensure that the firebaseUser.uid is used to reference the correct user in the database
+      const database = getDatabase();
+      const userRef = ref(database, `users/${firebaseUser.user.uid}`); // Use firebaseUser.uid here
+      await set(userRef, {
+        username: firstNameFromGoogle, // Store the first name
+        email: firebaseUser.user.email,
+      });
 
-     // Extract the first name from the user's display name (assuming the displayName is in "First Last" format)
-     const firstNameFromGoogle = firebaseUser.user.displayName.split(" ")[0];
+      // Save the user's first name and email in AsyncStorage
+      await AsyncStorage.setItem("firstName", firstNameFromGoogle);
+      await AsyncStorage.setItem("email", firebaseUser.user.email);
+      // Save user data
 
-     // Ensure that the firebaseUser.uid is used to reference the correct user in the database
-     const database = getDatabase();
-     const userRef = ref(database, `users/${firebaseUser.user.uid}`); // Use firebaseUser.uid here
-     await set(userRef, {
-       username: firstNameFromGoogle, // Store the first name
-       email: firebaseUser.user.email,
-     });
-
-     // Save the user's first name and email in AsyncStorage
-     await AsyncStorage.setItem("firstName", firstNameFromGoogle);
-     await AsyncStorage.setItem("email", firebaseUser.user.email);
-     // Save user data
-  
-
-     // Navigate to Home screen and pass the first name as a parameter
-     navigation.navigate("Home", {
-       firstName: firstNameFromGoogle,
-       email: firebaseUser.user.email, // Pass the first name to the Home screen
-     });
-   } catch (e) {
-     setError(e.message || "An error occurred during sign-in.");
-     console.error(e);
-   }
- };  
+      // Navigate to Home screen and pass the first name as a parameter
+      navigation.navigate("Home", {
+        firstName: firstNameFromGoogle,
+        email: firebaseUser.user.email, // Pass the first name to the Home screen
+      });
+    } catch (e) {
+      setError(e.message || "An error occurred during sign-in.");
+      console.error(e);
+    }
+  };
   const [firstName, setFirstName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -107,7 +104,6 @@ export default function SignUpForm() {
       return;
     }
 
-
     try {
       await AsyncStorage.setItem(
         "user",
@@ -115,7 +111,7 @@ export default function SignUpForm() {
       );
       const userCredential = await createUserWithEmailAndPassword(
         auth,
-        
+
         email,
         password
       );
@@ -200,8 +196,6 @@ export default function SignUpForm() {
 
 const styles = StyleSheet.create({
   container1: {
-    
-  
     alignItems: "center",
     justifyContent: "center",
   },

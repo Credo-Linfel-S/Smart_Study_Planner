@@ -167,7 +167,6 @@ const StudySchedule = ({ route }) => {
         Vibration.vibrate([500, 1000, 500, 1000, 500, 1000]);
         loadAndPlaySound(selectedAudio);
 
-
         schedulePushNotification(studyDateTime);
         setShowModal(true);
       }
@@ -218,47 +217,47 @@ const StudySchedule = ({ route }) => {
       console.error("Error scheduling notification:", error);
     }
   };
- const [expoPushToken, setExpoPushToken] = useState();
- const [notification, setNotification] = useState();
+  const [expoPushToken, setExpoPushToken] = useState();
+  const [notification, setNotification] = useState();
 
- const notificationListener = useRef();
- const responseListener = useRef();
+  const notificationListener = useRef();
+  const responseListener = useRef();
 
- async function registerForPushNotificationsAsync() {
-   let token;
-   if (Device.isDevice) {
-     const { status: existingStatus } =
-       await Notifications.getPermissionsAsync();
-     let finalStatus = existingStatus;
+  async function registerForPushNotificationsAsync() {
+    let token;
+    if (Device.isDevice) {
+      const { status: existingStatus } =
+        await Notifications.getPermissionsAsync();
+      let finalStatus = existingStatus;
 
-     if (existingStatus !== "granted") {
-       const { status } = await Notifications.requestPermissionsAsync();
-       finalStatus = status;
-     }
-     if (finalStatus !== "granted") {
-       alert("Failed to get push token for push notification");
-       return;
-     }
+      if (existingStatus !== "granted") {
+        const { status } = await Notifications.requestPermissionsAsync();
+        finalStatus = status;
+      }
+      if (finalStatus !== "granted") {
+        alert("Failed to get push token for push notification");
+        return;
+      }
 
-     token = await Notifications.getExpoPushTokenAsync({
-       projectId: Constants.expoConfig?.extra?.eas.projectId,
-     });
-   } else {
-     alert("Must be using a physical device for Push notifications");
-   }
+      token = await Notifications.getExpoPushTokenAsync({
+        projectId: Constants.expoConfig?.extra?.eas.projectId,
+      });
+    } else {
+      alert("Must be using a physical device for Push notifications");
+    }
 
-   // Set up notification channel for Android
-   if (Platform.OS === "android") {
-     await Notifications.setNotificationChannelAsync("default", {
-       name: "default",
-       importance: Notifications.AndroidImportance.MAX,
-       vibrationPattern: [0, 250, 250, 250],
-       lightColor: "#FF231F7C",
-     });
-   }
+    // Set up notification channel for Android
+    if (Platform.OS === "android") {
+      await Notifications.setNotificationChannelAsync("default", {
+        name: "default",
+        importance: Notifications.AndroidImportance.MAX,
+        vibrationPattern: [0, 250, 250, 250],
+        lightColor: "#FF231F7C",
+      });
+    }
 
-   return token;
- }
+    return token;
+  }
 
   useEffect(() => {
     // Register for notifications
@@ -390,8 +389,6 @@ const StudySchedule = ({ route }) => {
       Alert.alert("Error", "Failed to save Study Schedule. Please try again.");
     }
   };
-
-
 
   const renderAudioItem = ({ item }) => (
     <TouchableOpacity

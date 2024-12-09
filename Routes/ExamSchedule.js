@@ -9,7 +9,6 @@ import {
   View,
   Modal,
   FlatList,
-
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { getDatabase, ref, set, push } from "firebase/database";
@@ -35,7 +34,7 @@ export default ExamSchedule = ({ route }) => {
   const [sound, setSound] = useState(null);
   const [update, setUpdate] = useState();
   const navigation = useNavigation();
-    const [firstName, setFirstName] = useState("");
+  const [firstName, setFirstName] = useState("");
 
   // Request permissions for media library and fetch audio files
   useEffect(() => {
@@ -223,87 +222,90 @@ export default ExamSchedule = ({ route }) => {
   const notificationListener = useRef();
   const responseListener = useRef();
 
- async function registerForPushNotificationsAsync() {
-   let token;
-   if (Device.isDevice) {
-     const { status: existingStatus } =
-       await Notifications.getPermissionsAsync();
-     let finalStatus = existingStatus;
+  async function registerForPushNotificationsAsync() {
+    let token;
+    if (Device.isDevice) {
+      const { status: existingStatus } =
+        await Notifications.getPermissionsAsync();
+      let finalStatus = existingStatus;
 
-     if (existingStatus !== "granted") {
-       const { status } = await Notifications.requestPermissionsAsync();
-       finalStatus = status;
-     }
-     if (finalStatus !== "granted") {
-       alert("Failed to get push token for push notification");
-       return;
-     }
+      if (existingStatus !== "granted") {
+        const { status } = await Notifications.requestPermissionsAsync();
+        finalStatus = status;
+      }
+      if (finalStatus !== "granted") {
+        alert("Failed to get push token for push notification");
+        return;
+      }
 
-     token = await Notifications.getExpoPushTokenAsync({
-       projectId: Constants.expoConfig?.extra?.eas.projectId,
-     });
-   } else {
-     alert("Must be using a physical device for Push notifications");
-   }
+      token = await Notifications.getExpoPushTokenAsync({
+        projectId: Constants.expoConfig?.extra?.eas.projectId,
+      });
+    } else {
+      alert("Must be using a physical device for Push notifications");
+    }
 
-   // Set up notification channel for Android
-   if (Platform.OS === "android") {
-     await Notifications.setNotificationChannelAsync("default", {
-       name: "default",
-       importance: Notifications.AndroidImportance.MAX,
-       vibrationPattern: [0, 250, 250, 250],
-       lightColor: "#FF231F7C",
-     });
-   }
+    // Set up notification channel for Android
+    if (Platform.OS === "android") {
+      await Notifications.setNotificationChannelAsync("default", {
+        name: "default",
+        importance: Notifications.AndroidImportance.MAX,
+        vibrationPattern: [0, 250, 250, 250],
+        lightColor: "#FF231F7C",
+      });
+    }
 
-   return token;
- }
+    return token;
+  }
 
- useEffect(() => {
-   // Register for notifications
-   registerForPushNotificationsAsync().then((token) => {
-     setExpoPushToken(token);
-   });
+  useEffect(() => {
+    // Register for notifications
+    registerForPushNotificationsAsync().then((token) => {
+      setExpoPushToken(token);
+    });
 
-   // Listen for notifications
-   notificationListener.current = Notifications.addNotificationReceivedListener(
-     (notification) => {
-       setNotification(notification);
-     }
-   );
+    // Listen for notifications
+    notificationListener.current =
+      Notifications.addNotificationReceivedListener((notification) => {
+        setNotification(notification);
+      });
 
-   responseListener.current =
-     Notifications.addNotificationResponseReceivedListener((response) => {
-       console.log(response);
-     });
+    responseListener.current =
+      Notifications.addNotificationResponseReceivedListener((response) => {
+        console.log(response);
+      });
 
-   return () => {
-     Notifications.removeNotificationSubscription(notificationListener.current);
-     Notifications.removeNotificationSubscription(responseListener.current);
-   };
- }, []);
+    return () => {
+      Notifications.removeNotificationSubscription(
+        notificationListener.current
+      );
+      Notifications.removeNotificationSubscription(responseListener.current);
+    };
+  }, []);
 
- useEffect(() => {
-   const responseListener =
-     Notifications.addNotificationResponseReceivedListener(async (response) => {
-       console.log(
-         "Notification received in background or foreground",
-         response
-       );
+  useEffect(() => {
+    const responseListener =
+      Notifications.addNotificationResponseReceivedListener(
+        async (response) => {
+          console.log(
+            "Notification received in background or foreground",
+            response
+          );
 
-       // Check if the notification is related to study time and play sound
-       if (response.notification.request.content.title === "Study Time!") {
-         setModalVisible(true);
-         if (selectedAudio) {
-           await loadAndPlaySound(selectedAudio);
-         }
-       }
-     });
+          // Check if the notification is related to study time and play sound
+          if (response.notification.request.content.title === "Study Time!") {
+            setModalVisible(true);
+            if (selectedAudio) {
+              await loadAndPlaySound(selectedAudio);
+            }
+          }
+        }
+      );
 
-   return () => {
-     Notifications.removeNotificationSubscription(responseListener);
-   };
- }, [selectedAudio]);
+    return () => {
+      Notifications.removeNotificationSubscription(responseListener);
+    };
+  }, [selectedAudio]);
 
   const handleSaveExam = async () => {
     if (!subject || !module || !room || !date || !time || !selectedAudio) {
@@ -370,7 +372,7 @@ export default ExamSchedule = ({ route }) => {
           audioUri: selectedAudio,
           createdAt: new Date().toISOString(),
           username,
-          firstName
+          firstName,
         });
 
         navigation.navigate("Home", {

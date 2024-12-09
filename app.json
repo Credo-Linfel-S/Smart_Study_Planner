@@ -15,7 +15,7 @@
       "icon": "./assets/splash-icon.png",
       "color": "#000000"
     },
-    "scripts":{
+    "scripts": {
       "postinstall": "patch-package"
     },
     "splash": {
@@ -36,14 +36,13 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff",
         "googleServicesFile": "./google-services.json",
-
         "permissions": [
           "INTERNET",
           "READ_EXTERNAL_STORAGE",
-          "WRITE_EXTERNAL_STORAGE","android.permission.RECORD_AUDIO", "android.permission.VIBRATE"
-        ],
-        
-       /// "blockedPermissions": ["android.permission.RECORD_AUDIO"]
+          "WRITE_EXTERNAL_STORAGE",
+          "android.permission.RECORD_AUDIO",
+          "android.permission.VIBRATE"
+        ]
       },
       "package": "com.Linfel.Smart_Study_Planner"
     },
@@ -52,7 +51,10 @@
     },
     "extra": {
       "eas": {
-        
+        "projectId": "ade8da0e-cc47-4081-a63b-723f63c227d5"
+      },
+      "router": {
+        "origin": false
       }
     }
   }

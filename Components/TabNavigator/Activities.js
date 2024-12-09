@@ -495,7 +495,7 @@ export default function Activities({ route }) {
         <TouchableOpacity
           style={styles.addButton}
           onPress={toggleModal}
-         // onPressOut={() => setIsHovered(false)}
+          // onPressOut={() => setIsHovered(false)}
         >
           <Animated.View style={{ transform: [{ rotate }] }}>
             <Ionicons name="menu" size={24} color="black" />
