@@ -52,45 +52,7 @@ const LogInForm = () => {
     });
   }, []);
 
-  const signin = async () => {
-    try {
-      await GoogleSignin.hasPlayServices();
-      const user = await GoogleSignin.signIn();
-
-      // Firebase authentication
-      const { idToken } = await GoogleSignin.getTokens();
-      const googleCredential = GoogleAuthProvider.credential(idToken);
-
-      const firebaseUser = await signInWithCredential(auth, googleCredential);
-
-      setUserInfo(firebaseUser.user);
-      setError(null);
-
-      // Extract the first name from the user's display name (assuming the displayName is in "First Last" format)
-      const firstNameFromGoogle = firebaseUser.user.displayName.split(" ")[0];
-
-      // Ensure that the firebaseUser.uid is used to reference the correct user in the database
-      const database = getDatabase();
-      const userRef = ref(database, `users/${firebaseUser.user.uid}`); // Use firebaseUser.uid here
-      await set(userRef, {
-        username: firstNameFromGoogle, // Store the first name
-        email: firebaseUser.user.email,
-      });
-
-      // Save the user's first name and email in AsyncStorage
-      await AsyncStorage.setItem("firstName", firstNameFromGoogle);
-      await AsyncStorage.setItem("email", firebaseUser.user.email);
-
-      // Navigate to Home screen and pass the first name as a parameter
-      navigation.navigate("Home", {
-        firstName: firstNameFromGoogle,
-        email: firebaseUser.user.email, // Pass the first name to the Home screen
-      });
-    } catch (e) {
-      setError(e.message || "An error occurred during sign-in.");
-      console.error(e);
-    }
-  };
+ 
 
   // Async function for handling login
   const handleLogin = async () => {
@@ -193,17 +155,7 @@ const LogInForm = () => {
                 </Text>
               </TouchableOpacity>
             </View>
-            <View style={styles.container}>
-              <Text>{error && `Error: ${error}`}</Text>
-              {!userInfo && (
-                <GoogleSigninButton
-                  size={GoogleSigninButton.Size.Standard}
-                  color={GoogleSigninButton.Color.Dark}
-                  onPress={signin}
-                />
-              )}
-              <StatusBar style="auto" />
-            </View>
+           
           </ScrollView>
         </LinearGradient>
       </TouchableWithoutFeedback>

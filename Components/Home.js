@@ -313,9 +313,11 @@ const styles = StyleSheet.create({
   StudyButton: {
     marginRight: 100,
     marginTop: 10,
-    backgroundColor: "#56465C",
+    backgroundColor: "rgba(255, 255, 255, 0.15)",
     padding: 10,
     borderRadius: 5,
+    borderColor: "rgba(255, 255, 255, 0.6)",
+    borderWidth: 1,
   },
   Image: {
     width: 160,
@@ -324,9 +326,11 @@ const styles = StyleSheet.create({
   ExamButton: {
     marginTop: -39,
     marginLeft: 100,
-    backgroundColor: "#56465C",
+    backgroundColor: "rgba(255, 255, 255, 0.15)",
     padding: 10,
     borderRadius: 5,
+    borderColor: "rgba(255, 255, 255, 0.6)",
+    borderWidth: 1,
   },
   nameOfUser: {
     fontSize: 20,
@@ -394,6 +398,8 @@ const styles = StyleSheet.create({
     padding: 15,
     width: "80%",
     borderRadius: 5,
+    borderColor: "rgba(255, 255, 255, 0.6)",
+    borderWidth: 1,
   },
   logoutText: {
     color: "#FFF",
