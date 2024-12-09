@@ -42,18 +42,16 @@ export const handleLogout = async (navigation) => {
 };
 
 // Stack Navigator
-const index= () => {
+const index = () => {
   const Stack = createNativeStackNavigator();
 
   return (
-    <Stack.Navigator initialRouteName="Home">
+    <Stack.Navigator initialRouteName="LogInForm">
       <Stack.Screen
         name="LogInForm"
         component={LogInForm}
         options={{ headerShown: false }}
       />
-   
-   
       <Stack.Screen
         name="SignUpForm"
         component={SignUpForm}

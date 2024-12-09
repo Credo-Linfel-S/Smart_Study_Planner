@@ -36,7 +36,7 @@ export default function SignUpForm() {
 
  const [error, setError] = useState();
  const [userInfo, setUserInfo] = useState();
- //const navigation = useNavigation(); // Initialize navigation
+
 
  useEffect(() => {
    GoogleSignin.configure({

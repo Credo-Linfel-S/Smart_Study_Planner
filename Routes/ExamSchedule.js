@@ -28,7 +28,6 @@ export default ExamSchedule = ({ route }) => {
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
   const [showModal, setShowModal] = useState(false);
-  //const [duration, setDuration] = useState("");
   const [countdown, setCountdown] = useState(null);
   const [examTimeReached, setExamTimeReached] = useState(false);
   const [audioFiles, setAudioFiles] = useState([]);
