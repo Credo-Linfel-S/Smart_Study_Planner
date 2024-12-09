@@ -27,7 +27,7 @@ import FontAwesome from "@expo/vector-icons/FontAwesome";
 import Entypo from "@expo/vector-icons/Entypo";
 import AntDesign from "@expo/vector-icons/AntDesign";
 export default function Activities({ route }) {
-  // const [isModalVisible, setIsModalVisible] = useState(false);
+
   const [username, setUsername] = useState(
     route.params?.firstName || "Username"
   );
