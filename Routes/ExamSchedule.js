@@ -7,7 +7,9 @@ import {
   StyleSheet,
   Vibration,
   View,
+  Modal,
   FlatList,
+
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { getDatabase, ref, set, push } from "firebase/database";
@@ -17,9 +19,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { Audio } from "expo-av";
 import * as MediaLibrary from "expo-media-library";
 import * as Notifications from "expo-notifications";
-
 import Constants from "expo-constants";
-// Initialize audio settings for playback
 
 export default ExamSchedule = ({ route }) => {
   const [subject, setSubject] = useState("");
@@ -36,6 +36,7 @@ export default ExamSchedule = ({ route }) => {
   const [sound, setSound] = useState(null);
   const [update, setUpdate] = useState();
   const navigation = useNavigation();
+    const [firstName, setFirstName] = useState("");
 
   // Request permissions for media library and fetch audio files
   useEffect(() => {
@@ -46,7 +47,7 @@ export default ExamSchedule = ({ route }) => {
         shouldSetBadge: true,
       }),
     });
-    Audio;
+
     Audio.setAudioModeAsync({
       allowsRecordingIOS: false,
       playsInSilentModeIOS: true,
@@ -56,6 +57,7 @@ export default ExamSchedule = ({ route }) => {
       shouldDuckAndroid: true,
       playThroughEarpieceAndroid: false,
     });
+
     const getPermissionsAndFiles = async () => {
       const { status } = await MediaLibrary.requestPermissionsAsync();
       if (status === "granted") {
@@ -118,10 +120,26 @@ export default ExamSchedule = ({ route }) => {
       } catch (error) {
         console.error("Error stopping sound:", error);
       } finally {
-        setSound(null); // Ensure the sound state is reset
+        setSound(null);
       }
     }
   };
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const storedFirstName = await AsyncStorage.getItem("firstName");
+        const storedUsername = await AsyncStorage.getItem("username");
+
+        if (storedFirstName) setFirstName(storedFirstName);
+        if (storedUsername) setUsername(storedUsername);
+      } catch (error) {
+        console.error("Error fetching user data:", error);
+      }
+    };
+
+    fetchUserData();
+  }, []);
 
   const startExamTimeCheck = (examDate, examTime) => {
     const examTime24h = convertTo24HourFormat(examTime);
@@ -145,22 +163,12 @@ export default ExamSchedule = ({ route }) => {
 
       if (timeRemaining <= 0 && !examTimeReached) {
         setExamTimeReached(true);
-        clearInterval(interval); // Stop the interval
+        clearInterval(interval);
 
         Vibration.vibrate([500, 1000, 500, 1000, 500, 1000]);
         loadAndPlaySound(selectedAudio);
         schedulePushNotification(examDateTime);
         setShowModal(true);
-        //  Alert.alert("Exam Time", `It's time for your ${subject} exam!`, [
-        //   {
-        //     text: "Okay",
-        //     onPress: async () => {
-        //      await stopSound(); // Force-stop sound
-        //     setSound(null); // Reset state to ensure no lingering sound instance
-        //     console.log("Audio stopped via Alert.");
-        //   },
-        // },
-        //  ]);
       }
 
       const hours = Math.floor(timeRemaining / (1000 * 60 * 60));
@@ -186,72 +194,117 @@ export default ExamSchedule = ({ route }) => {
     return `${hours}:${minutes < 10 ? `0${minutes}` : minutes}`;
   };
 
+  const schedulePushNotification = async (examDateTime) => {
+    try {
+      console.log("Scheduling notification for", examDateTime);
+
+      await Notifications.scheduleNotificationAsync({
+        content: {
+          title: "It's Time for your Exam!",
+          body: `It's time for your exam session on ${subject}.`,
+          sound: selectedAudio,
+          vibrate: [500, 1000, 500],
+        },
+        trigger: {
+          // Set the trigger time to the studyDateTime
+          timestamp: examDateTime.getTime(),
+          channelId: "alarm-channel",
+        },
+      });
+
+      console.log("Notification scheduled successfully!");
+    } catch (error) {
+      console.error("Error scheduling notification:", error);
+    }
+  };
+
   const [expoPushToken, setExpoPushToken] = useState();
   const [notification, setNotification] = useState();
 
   const notificationListener = useRef();
   const responseListener = useRef();
 
-  async function registerForPushNotificationsAsync() {
-    let token;
-    if (Device.isDevice) {
-      const { status: existingStatus } =
-        await Notifications.getPermissionsAsync();
-      let finalStatus = existingStatus;
+ async function registerForPushNotificationsAsync() {
+   let token;
+   if (Device.isDevice) {
+     const { status: existingStatus } =
+       await Notifications.getPermissionsAsync();
+     let finalStatus = existingStatus;
 
-      if (existingStatus !== "granted") {
-        const { status } = await Notifications.requestPermissionsAsync();
-        finalStatus = status;
-      }
-      if (finalStatus !== "granted") {
-        alert("Failed to get push token for push notification");
-        return;
-      }
+     if (existingStatus !== "granted") {
+       const { status } = await Notifications.requestPermissionsAsync();
+       finalStatus = status;
+     }
+     if (finalStatus !== "granted") {
+       alert("Failed to get push token for push notification");
+       return;
+     }
 
-      token = await Notifications.getExpoPushTokenAsync({
-        projectId: Constants.expoConfig?.extra?.eas.projectId,
-      });
-    } else {
-      alert("Must be using a physical device for Push notifications");
-    }
+     token = await Notifications.getExpoPushTokenAsync({
+       projectId: Constants.expoConfig?.extra?.eas.projectId,
+     });
+   } else {
+     alert("Must be using a physical device for Push notifications");
+   }
 
-    // Set up notification channel for Android
-    if (Platform.OS === "android") {
-      await Notifications.setNotificationChannelAsync("default", {
-        name: "default",
-        importance: Notifications.AndroidImportance.MAX,
-        vibrationPattern: [0, 250, 250, 250],
-        lightColor: "#FF231F7C",
-      });
-    }
+   // Set up notification channel for Android
+   if (Platform.OS === "android") {
+     await Notifications.setNotificationChannelAsync("default", {
+       name: "default",
+       importance: Notifications.AndroidImportance.MAX,
+       vibrationPattern: [0, 250, 250, 250],
+       lightColor: "#FF231F7C",
+     });
+   }
 
-    return token;
-  }
+   return token;
+ }
 
-  useEffect(() => {
-    // Register for notifications
-    registerForPushNotificationsAsync().then((token) => {
-      setExpoPushToken(token);
-    });
+ useEffect(() => {
+   // Register for notifications
+   registerForPushNotificationsAsync().then((token) => {
+     setExpoPushToken(token);
+   });
 
-    // Listen for notifications
-    notificationListener.current =
-      Notifications.addNotificationReceivedListener((notification) => {
-        setNotification(notification);
-      });
+   // Listen for notifications
+   notificationListener.current = Notifications.addNotificationReceivedListener(
+     (notification) => {
+       setNotification(notification);
+     }
+   );
 
-    responseListener.current =
-      Notifications.addNotificationResponseReceivedListener((response) => {
-        console.log(response);
-      });
+   responseListener.current =
+     Notifications.addNotificationResponseReceivedListener((response) => {
+       console.log(response);
+     });
 
-    return () => {
-      Notifications.removeNotificationSubscription(
-        notificationListener.current
-      );
-      Notifications.removeNotificationSubscription(responseListener.current);
-    };
-  }, []);
+   return () => {
+     Notifications.removeNotificationSubscription(notificationListener.current);
+     Notifications.removeNotificationSubscription(responseListener.current);
+   };
+ }, []);
+
+ useEffect(() => {
+   const responseListener =
+     Notifications.addNotificationResponseReceivedListener(async (response) => {
+       console.log(
+         "Notification received in background or foreground",
+         response
+       );
+
+       // Check if the notification is related to study time and play sound
+       if (response.notification.request.content.title === "Study Time!") {
+         setModalVisible(true);
+         if (selectedAudio) {
+           await loadAndPlaySound(selectedAudio);
+         }
+       }
+     });
+
+   return () => {
+     Notifications.removeNotificationSubscription(responseListener);
+   };
+ }, [selectedAudio]);
 
   const handleSaveExam = async () => {
     if (!subject || !module || !room || !date || !time || !selectedAudio) {
@@ -318,6 +371,7 @@ export default ExamSchedule = ({ route }) => {
           audioUri: selectedAudio,
           createdAt: new Date().toISOString(),
           username,
+          firstName
         });
 
         navigation.navigate("Home", {
@@ -348,69 +402,9 @@ export default ExamSchedule = ({ route }) => {
       <Text style={styles.audioText}>{item.filename}</Text>
     </TouchableOpacity>
   );
-  const schedulePushNotification = async (studyDateTime) => {
-    try {
-      console.log("Scheduling notification for", studyDateTime);
-
-      await Notifications.scheduleNotificationAsync({
-        content: {
-          title: "Study Time!",
-          body: `It's time for your study session on ${subject}.`,
-          sound: selectedAudio || "default",
-          vibrate: [500, 1000, 500],
-        },
-        trigger: {
-          // Set the trigger time to the studyDateTime
-          timestamp: studyDateTime.getTime(),
-          channelId: "alarm-channel",
-        },
-      });
-
-      console.log("Notification scheduled successfully!");
-    } catch (error) {
-      console.error("Error scheduling notification:", error);
-    }
-  };
 
   // Handle notification and play sound when the notification is received
-  useEffect(() => {
-    const responseListener =
-      Notifications.addNotificationResponseReceivedListener(
-        async (response) => {
-          console.log(
-            "Notification received in background or foreground",
-            response
-          );
 
-          // Check if the notification is related to study time and play sound
-          if (response.notification.request.content.title === "Study Time!") {
-            setModalVisible(true);
-            if (selectedAudio) {
-              await loadAndPlaySound(selectedAudio);
-            }
-          }
-        }
-      );
-
-    return () => {
-      Notifications.removeNotificationSubscription(responseListener);
-    };
-  }, [selectedAudio]);
-  useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        const storedFirstName = await AsyncStorage.getItem("firstName");
-        const storedUsername = await AsyncStorage.getItem("username");
-
-        if (storedFirstName) setFirstName(storedFirstName);
-        if (storedUsername) setUsername(storedUsername);
-      } catch (error) {
-        console.error("Error fetching user data:", error);
-      }
-    };
-
-    fetchUserData();
-  }, []);
   return (
     <LinearGradient
       colors={["#56465C", "#8A667B", "#5D5979"]}
@@ -567,6 +561,42 @@ const styles = StyleSheet.create({
   CancelText: {
     color: "#FFFFFF",
     fontSize: 18,
+    textAlign: "center",
+  },
+  modalBackground: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0,0,0,0.5)",
+  },
+  modalContainer: {
+    width: 300,
+    padding: 20,
+    backgroundColor: "#fff",
+    borderRadius: 10,
+    alignItems: "center",
+    borderWidth: 3,
+    borderColor: "rgba(255, 255, 255, 0.3)",
+  },
+  modalHeader: {
+    fontSize: 18,
+    fontWeight: "bold",
+  },
+  modalText: {
+    fontSize: 16,
+    marginVertical: 10,
+  },
+  modalButton: {
+    backgroundColor: "#2F8573",
+    paddingVertical: 10,
+    paddingHorizontal: 10,
+    borderRadius: 5,
+    marginTop: 20,
+    borderWidth: 1,
+  },
+  modalButtonText: {
+    color: "#FFFFFF",
+    fontSize: 16,
     textAlign: "center",
   },
 });

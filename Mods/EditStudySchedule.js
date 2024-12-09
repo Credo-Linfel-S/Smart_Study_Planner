@@ -1,4 +1,4 @@
-import React, { useState, useEffect,useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   View,
   Text,
@@ -8,7 +8,7 @@ import {
   FlatList,
   Vibration,
   Alert,
-  Modal
+  Modal,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { Audio } from "expo-av";
@@ -32,16 +32,16 @@ export default function EditStudySchedule({ route }) {
   const [selectedAudio, setSelectedAudio] = useState(null);
   const [sound, setSound] = useState(null);
   const [firstName, setFirstName] = useState("");
-const [showModal, setShowModal] = useState(false);
+  const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
-     Notifications.setNotificationHandler({
-       handleNotification: async () => ({
-         shouldPlaySound: false,
-         shouldShowAlert: true,
-         shouldSetBadge: false,
-       }),
-     });
+    Notifications.setNotificationHandler({
+      handleNotification: async () => ({
+        shouldPlaySound: false,
+        shouldShowAlert: true,
+        shouldSetBadge: false,
+      }),
+    });
     Audio.setAudioModeAsync({
       allowsRecordingIOS: false,
       playsInSilentModeIOS: true,
@@ -117,85 +117,73 @@ const [showModal, setShowModal] = useState(false);
     }
   };
 
-  const renderAudioItem = ({ item }) => (
-    <TouchableOpacity
-      style={[
-        styles.audioItem,
-        selectedAudio === item.uri && styles.audioItemSelected,
-      ]}
-      onPress={() => setSelectedAudio(item.uri)}
-    >
-      <Text style={styles.audioText}>{item.filename}</Text>
-    </TouchableOpacity>
-  );
- const startStudyTimeCheck = (studyDate, studyTime) => {
-   const studyTime24h = convertTo24HourFormat(studyTime);
-   const studyDateTimeString = `${studyDate} ${studyTime24h}`;
-   const studyDateTime = parse(
-     studyDateTimeString,
-     "MM-dd-yyyy HH:mm",
-     new Date()
-   );
+  const startStudyTimeCheck = (studyDate, studyTime) => {
+    const studyTime24h = convertTo24HourFormat(studyTime);
+    const studyDateTimeString = `${studyDate} ${studyTime24h}`;
+    const studyDateTime = parse(
+      studyDateTimeString,
+      "MM-dd-yyyy HH:mm",
+      new Date()
+    );
 
-   if (isNaN(studyDateTime)) {
-     console.error("Failed to parse study date/time:", studyDateTimeString);
-     Alert.alert("Error", "Invalid study date or time.");
-     return;
-   }
+    if (isNaN(studyDateTime)) {
+      console.error("Failed to parse study date/time:", studyDateTimeString);
+      Alert.alert("Error", "Invalid study date or time.");
+      return;
+    }
 
-   let interval = null;
-   interval = setInterval(() => {
-     const now = new Date();
-     const timeRemaining = studyDateTime - now;
+    let interval = null;
+    interval = setInterval(() => {
+      const now = new Date();
+      const timeRemaining = studyDateTime - now;
 
-     if (timeRemaining <= 0 && !studyTimeReached) {
-       setStudyTimeReached(true);
-       clearInterval(interval); // Stop the interval
+      if (timeRemaining <= 0 && !studyTimeReached) {
+        setStudyTimeReached(true);
+        clearInterval(interval); // Stop the interval
 
-       Vibration.vibrate([500, 1000, 500, 1000, 500, 1000]);
-       loadAndPlaySound(selectedAudio);
+        Vibration.vibrate([500, 1000, 500, 1000, 500, 1000]);
+        loadAndPlaySound(selectedAudio);
 
-       // Schedule a push notification at the study time
-       schedulePushNotification(studyDateTime); // Schedule notification
- setShowModal(true);
-       // Optional fallback alert
-      
-     }
+        // Schedule a push notification at the study time
+        schedulePushNotification(studyDateTime); // Schedule notification
+        setShowModal(true);
+        // Optional fallback alert
+      }
 
-     const hours = Math.floor(timeRemaining / (1000 * 60 * 60));
-     const minutes = Math.floor(
-       (timeRemaining % (1000 * 60 * 60)) / (1000 * 60)
-     );
-     const seconds = Math.floor((timeRemaining % (1000 * 60)) / 1000);
+      const hours = Math.floor(timeRemaining / (1000 * 60 * 60));
+      const minutes = Math.floor(
+        (timeRemaining % (1000 * 60 * 60)) / (1000 * 60)
+      );
+      const seconds = Math.floor((timeRemaining % (1000 * 60)) / 1000);
 
-     setCountdown(`${hours}:${minutes}:${seconds}`);
-   }, 1000);
- };
+      setCountdown(`${hours}:${minutes}:${seconds}`);
+    }, 1000);
+  };
 
- // Function to schedule the push notification
- const schedulePushNotification = async (studyDateTime) => {
-   try {
-     console.log("Scheduling notification for", studyDateTime); // Log for debugging
+  // Function to schedule the push notification
+  const schedulePushNotification = async (studyDateTime) => {
+    try {
+      console.log("Scheduling notification for", studyDateTime); // Log for debugging
 
-     await Notifications.scheduleNotificationAsync({
-       content: {
-         title: "Study Time!",
-         body: `It's time for your study session on ${subject}.`,
-         sound: true,
-         vibrate: [500, 1000, 500],
-         //music: loadAndPlaySound(selectedAudio),
-       },
-       trigger: {
-         // Set the trigger time to the studyDateTime
-         timestamp: studyDateTime.getTime(),
-       },
-     });
+      await Notifications.scheduleNotificationAsync({
+        content: {
+          title: "Study Time!",
+          body: `It's time for your study session on ${subject}.`,
+          sound: "default",
+          vibrate: [500, 1000, 500],
+          //music: loadAndPlaySound(selectedAudio),
+        },
+        trigger: {
+          // Set the trigger time to the studyDateTime
+          timestamp: studyDateTime.getTime(),
+        },
+      });
 
-     console.log("Notification scheduled successfully!");
-   } catch (error) {
-     console.error("Error scheduling notification:", error);
-   }
- };
+      console.log("Notification scheduled successfully!");
+    } catch (error) {
+      console.error("Error scheduling notification:", error);
+    }
+  };
   const [expoPushToken, setExpoPushToken] = useState();
   const [notification, setNotification] = useState();
 
@@ -263,8 +251,6 @@ const [showModal, setShowModal] = useState(false);
     };
   }, []);
 
-
-
   const convertTo24HourFormat = (time12h) => {
     const [time, modifier] = time12h.split(/(AM|PM)/i);
     let [hours, minutes] = time.split(":").map(Number);
@@ -290,6 +276,18 @@ const [showModal, setShowModal] = useState(false);
     startStudyTimeCheck(date, time);
     navigation.navigate("Activities", { updatedStudy }); // Pass updated study back
   };
+
+  const renderAudioItem = ({ item }) => (
+    <TouchableOpacity
+      style={[
+        styles.audioItem,
+        selectedAudio === item.uri && styles.audioItemSelected,
+      ]}
+      onPress={() => setSelectedAudio(item.uri)}
+    >
+      <Text style={styles.audioText}>{item.filename}</Text>
+    </TouchableOpacity>
+  );
 
   return (
     <LinearGradient
@@ -442,6 +440,42 @@ const styles = StyleSheet.create({
   CancelText: {
     color: "#FFFFFF",
     fontSize: 18,
+    textAlign: "center",
+  },
+  modalBackground: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0,0,0,0.5)",
+  },
+  modalContainer: {
+    width: 300,
+    padding: 20,
+    backgroundColor: "#fff",
+    borderRadius: 10,
+    alignItems: "center",
+    borderWidth: 3,
+    borderColor: "rgba(255, 255, 255, 0.3)",
+  },
+  modalHeader: {
+    fontSize: 18,
+    fontWeight: "bold",
+  },
+  modalText: {
+    fontSize: 16,
+    marginVertical: 10,
+  },
+  modalButton: {
+    backgroundColor: "#2F8573",
+    paddingVertical: 10,
+    paddingHorizontal: 10,
+    borderRadius: 5,
+    marginTop: 20,
+    borderWidth: 1,
+  },
+  modalButtonText: {
+    color: "#FFFFFF",
+    fontSize: 16,
     textAlign: "center",
   },
 });

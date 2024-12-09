@@ -1,4 +1,4 @@
-import React, { useState, useEffect,useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   View,
   Text,
@@ -31,13 +31,13 @@ export default function EditExamSchedule({ route }) {
   const [sound, setSound] = useState(null);
 
   useEffect(() => {
-         Notifications.setNotificationHandler({
-           handleNotification: async () => ({
-             shouldPlaySound: true,
-             shouldShowAlert: true,
-             shouldSetBadge: true,
-           }),
-         });
+    Notifications.setNotificationHandler({
+      handleNotification: async () => ({
+        shouldPlaySound: true,
+        shouldShowAlert: true,
+        shouldSetBadge: true,
+      }),
+    });
     Audio.setAudioModeAsync({
       allowsRecordingIOS: false,
       playsInSilentModeIOS: true,
@@ -113,17 +113,6 @@ export default function EditExamSchedule({ route }) {
     }
   };
 
-  const renderAudioItem = ({ item }) => (
-    <TouchableOpacity
-      style={[
-        styles.audioItem,
-        selectedAudio === item.uri && styles.audioItemSelected,
-      ]}
-      onPress={() => setSelectedAudio(item.uri)}
-    >
-      <Text style={styles.audioText}>{item.filename}</Text>
-    </TouchableOpacity>
-  );
   const startExamTimeCheck = (examDate, examTime) => {
     const examTime24h = convertTo24HourFormat(examTime);
     const examDateTimeString = `${examDate} ${examTime24h}`;
@@ -150,7 +139,8 @@ export default function EditExamSchedule({ route }) {
 
         Vibration.vibrate([500, 1000, 500, 1000, 500, 1000]);
         loadAndPlaySound(selectedAudio);
-schedulePushNotification(examDateTime); 
+        schedulePushNotification(examDateTime);
+        setShowModal(true);
         Alert.alert("Exam Time", `It's time for your ${subject} exam!`, [
           {
             text: "Okay",
@@ -172,70 +162,70 @@ schedulePushNotification(examDateTime);
       setCountdown(`${hours}:${minutes}:${seconds}`);
     }, 1000);
   };
- const schedulePushNotification = async (examDateTime) => {
-   try {
-     console.log("Scheduling notification for", examDateTime); // Log for debugging
+  const schedulePushNotification = async (examDateTime) => {
+    try {
+      console.log("Scheduling notification for", examDateTime); // Log for debugging
 
-     await Notifications.scheduleNotificationAsync({
-       content: {
-         title: "Exam Time!",
-         body: `It's time for your exam session on ${subject}.`,
-         sound: true,
-         vibrate: [500, 1000, 500],
-         //music:loadAndPlaySound(selectedAudio),
-       },
-       trigger: {
-         // Set the trigger time to the studyDateTime
-         timestamp: examDateTime.getTime(),
-       },
-     });
+      await Notifications.scheduleNotificationAsync({
+        content: {
+          title: "Exam Time!",
+          body: `It's time for your exam session on ${subject}.`,
+          sound: true,
+          vibrate: [500, 1000, 500],
+          //music:loadAndPlaySound(selectedAudio),
+        },
+        trigger: {
+          // Set the trigger time to the studyDateTime
+          timestamp: examDateTime.getTime(),
+        },
+      });
 
-     console.log("Notification scheduled successfully!");
-   } catch (error) {
-     console.error("Error scheduling notification:", error);
-   }
- };
- const [expoPushToken, setExpoPushToken] = useState();
- const [notification, setNotification] = useState();
+      console.log("Notification scheduled successfully!");
+    } catch (error) {
+      console.error("Error scheduling notification:", error);
+    }
+  };
+  const [expoPushToken, setExpoPushToken] = useState();
+  const [notification, setNotification] = useState();
 
- const notificationListener = useRef();
- const responseListener = useRef();
+  const notificationListener = useRef();
+  const responseListener = useRef();
 
- async function registerForPushNotificationsAsync() {
-   let token;
-   if (Device.isDevice) {
-     const { status: existingStatus } =
-       await Notifications.getPermissionsAsync();
-     let finalStatus = existingStatus;
+  async function registerForPushNotificationsAsync() {
+    let token;
+    if (Device.isDevice) {
+      const { status: existingStatus } =
+        await Notifications.getPermissionsAsync();
+      let finalStatus = existingStatus;
 
-     if (existingStatus !== "granted") {
-       const { status } = await Notifications.requestPermissionsAsync();
-       finalStatus = status;
-     }
-     if (finalStatus !== "granted") {
-       alert("Failed to get push token for push notification");
-       return;
-     }
+      if (existingStatus !== "granted") {
+        const { status } = await Notifications.requestPermissionsAsync();
+        finalStatus = status;
+      }
+      if (finalStatus !== "granted") {
+        alert("Failed to get push token for push notification");
+        return;
+      }
 
-     token = await Notifications.getExpoPushTokenAsync({
-       projectId: Constants.expoConfig?.extra?.eas.projectId,
-     });
-   } else {
-     alert("Must be using a physical device for Push notifications");
-   }
+      token = await Notifications.getExpoPushTokenAsync({
+        projectId: Constants.expoConfig?.extra?.eas.projectId,
+      });
+    } else {
+      alert("Must be using a physical device for Push notifications");
+    }
 
-   // Set up notification channel for Android
-   if (Platform.OS === "android") {
-     await Notifications.setNotificationChannelAsync("default", {
-       name: "default",
-       importance: Notifications.AndroidImportance.MAX,
-       vibrationPattern: [0, 250, 250, 250],
-       lightColor: "#FF231F7C",
-     });
-   }
+    // Set up notification channel for Android
+    if (Platform.OS === "android") {
+      await Notifications.setNotificationChannelAsync("default", {
+        name: "default",
+        importance: Notifications.AndroidImportance.MAX,
+        vibrationPattern: [0, 250, 250, 250],
+        lightColor: "#FF231F7C",
+      });
+    }
 
-   return token;
- }
+    return token;
+  }
   useEffect(() => {
     // Register for notifications
     registerForPushNotificationsAsync().then((token) => {
@@ -287,7 +277,17 @@ schedulePushNotification(examDateTime);
     startExamTimeCheck(date, time);
     navigation.navigate("Activities", { updatedExam }); // Pass updated study back
   };
-
+  const renderAudioItem = ({ item }) => (
+    <TouchableOpacity
+      style={[
+        styles.audioItem,
+        selectedAudio === item.uri && styles.audioItemSelected,
+      ]}
+      onPress={() => setSelectedAudio(item.uri)}
+    >
+      <Text style={styles.audioText}>{item.filename}</Text>
+    </TouchableOpacity>
+  );
   return (
     <LinearGradient
       colors={["#56465C", "#8A667B", "#5D5979"]}
@@ -348,6 +348,30 @@ schedulePushNotification(examDateTime);
           <Text style={styles.saveButtonText}>Save Changes</Text>
         </TouchableOpacity>
       </View>
+      <Modal
+        animationType="fade"
+        transparent={true}
+        visible={showModal}
+        onRequestClose={() => setShowModal(false)}
+      >
+        <View style={styles.modalBackground}>
+          <View style={styles.modalContainer}>
+            <Text style={styles.modalHeader}>Exam Time!</Text>
+            <Text style={styles.modalText}>
+              It's time for your {subject} exam session.
+            </Text>
+            <TouchableOpacity
+              style={styles.modalButton}
+              onPress={() => {
+                stopSound();
+                setShowModal(false);
+              }}
+            >
+              <Text style={styles.modalButtonText}>Close</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </LinearGradient>
   );
 }
@@ -418,6 +442,42 @@ const styles = StyleSheet.create({
   CancelText: {
     color: "#FFFFFF",
     fontSize: 18,
+    textAlign: "center",
+  },
+  modalBackground: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0,0,0,0.5)",
+  },
+  modalContainer: {
+    width: 300,
+    padding: 20,
+    backgroundColor: "#fff",
+    borderRadius: 10,
+    alignItems: "center",
+    borderWidth: 3,
+    borderColor: "rgba(255, 255, 255, 0.3)",
+  },
+  modalHeader: {
+    fontSize: 18,
+    fontWeight: "bold",
+  },
+  modalText: {
+    fontSize: 16,
+    marginVertical: 10,
+  },
+  modalButton: {
+    backgroundColor: "#2F8573",
+    paddingVertical: 10,
+    paddingHorizontal: 10,
+    borderRadius: 5,
+    marginTop: 20,
+    borderWidth: 1,
+  },
+  modalButtonText: {
+    color: "#FFFFFF",
+    fontSize: 16,
     textAlign: "center",
   },
 });
